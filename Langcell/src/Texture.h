@@ -18,7 +18,7 @@ public:
 	void Bind(unsigned int slot = 0) const;
 	void Unbind() const;
 
-	void Refresh(unsigned int speed, float mutation, float closeness);
+	void Refresh(unsigned int speed, float mutation);
 
 	Cell* getCell(int x, int y) { return cells.at(cells.size() -1 - y).at(x); }
 	int GetWidth() const { return m_Width; }

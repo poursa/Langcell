@@ -48,7 +48,7 @@ public:
 	inline void setWater(bool water) { m_water = water; }
 
 	void mutate(float rate);
-	Cell* createEvolution(float rate, float closeness);
+	Cell* createEvolution(float rate);
 	void store();
 
 	RGBAstr getColor() const;

@@ -24,10 +24,10 @@ Cell::Cell(bool rand)
 		
 		int randomsyntax = rsyn(gen);
 		old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(randomsyntax);
-		old.m_Csize = m_Csize = rC(gen);
-		old.m_Vsize = m_Vsize = rV(gen);
-		old.m_Mtype = m_Mtype = rM(gen);
-		old.m_Gsize = m_Gsize = rG(gen);
+		old.m_Csize = m_Csize = static_cast<float>(rC(gen));
+		old.m_Vsize = m_Vsize = static_cast<float>(rV(gen));
+		old.m_Mtype = m_Mtype = static_cast<float>(rM(gen));
+		old.m_Gsize = m_Gsize = static_cast<float>(rG(gen));
 
 		
 	}
@@ -36,11 +36,11 @@ Cell::Cell(bool rand)
 Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
 {
 	/*Bound checking*/
-	old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(std::abs(syntaxPos % 6));
-	old.m_Csize = m_Csize = Csize < 8 ? 8 : (Csize > 100 ? 100 : Csize);
-	old.m_Vsize = m_Vsize = Vsize < 3 ? 3 : (Vsize > 50 ? 50 : Vsize);
-	old.m_Mtype = m_Mtype = Mtype > 50 ? 50 : (Mtype < 0 ? 0 : Mtype);
-	old.m_Gsize = m_Gsize = Gsize > 20 ? 20 : (Gsize < 0 ? 0 : Gsize);
+	old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(std::abs(syntaxPos % 6)); //3 bits
+	old.m_Csize = m_Csize = Csize < 8 ? 8 : (Csize > 100 ? 100 : Csize); //5
+	old.m_Vsize = m_Vsize = Vsize < 3 ? 3 : (Vsize > 50 ? 50 : Vsize); //4
+	old.m_Mtype = m_Mtype = Mtype > 50 ? 50 : (Mtype < 0 ? 0 : Mtype); //4
+	old.m_Gsize = m_Gsize = Gsize > 20 ? 20 : (Gsize < 0 ? 0 : Gsize); //4
 }
 
 
@@ -48,22 +48,22 @@ Cell::~Cell(){}
 
 RGBAstr Cell::getColor() const
 {
-	
+
 	float red = m_Mtype;
-	float green = m_Csize ;
+	float green = m_Csize;
 	float blue = m_Vsize ;
 
-	/*Normalize colors*/
+	///*Normalize colors*/
 	red = red  /50 ;
 	green = (green - 8) / (100 - 8);
-	blue = (blue - 3) / (50 - 3);
+	blue  = (blue - 3) / (50 - 3);
 
-	unsigned int red_255 = red * (float)255;
-	unsigned int green_255 = green * (float)255;
-	unsigned int blue_255 = blue * (float)255;
+	unsigned int red_255 = red * 255.f;
+	unsigned int green_255 = green * 255.f;
+	unsigned int blue_255 = blue * 255.f;
 
-	RGBAstr color = { red_255, green_255, blue_255, 255 };
-	return color;
+	RGBAstr colorrgb = { red_255, green_255, blue_255, 255 };
+	return colorrgb;
 }
 
 void Cell::mutate(float rate)
@@ -108,94 +108,61 @@ void Cell::mutate(float rate)
 	}
 }
 
-Cell* Cell::createEvolution(float rate,float closeness)
+Cell* Cell::createEvolution(float rate)
 {
 	std::vector<float> thiscell{static_cast<float>(this->getsyntaxPos()),this->getCsize(),this->getVsize(),this->getGsize(),this->getMtype()};
 	//The neighbors of a cell make its contents move towards them more if they are correlated
 	float cossimtop = -1;
 	float aggSyn = 0, aggC = 0, aggV = 0, aggM = 0, aggG = 0;
-	if (this->m_top != nullptr) {
-		std::vector<float> top{ static_cast<float>(this->m_top->getOsyntaxPos()),this->m_top->getOCsize(),this->m_top->getOVsize(),this->m_top->getOGsize(),this->m_top->getOMtype() };
-		cossimtop = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), top.begin(), 0.0f) / (vecnorm5d(thiscell)*vecnorm5d(top)));
-		if (this->m_top->getOsyntaxPos() != m_syntaxPos) {
-			aggSyn += ((m_syntaxPos < this->m_top->getOsyntaxPos()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOsyntaxPos() - m_syntaxPos));
-		}
-		if (this->m_top->getOCsize() != m_Csize) {
-			aggC += ((m_Csize < this->m_top->getOCsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOCsize() - m_Csize));
-		}
-		if (this->m_top->getOVsize() != m_Vsize) {
-			aggV += ((m_Vsize < this->m_top->getOVsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOVsize() - m_Vsize));
-		}
-		if (this->m_top->getOMtype() != m_Mtype) {
-			aggM += ((m_Mtype < this->m_top->getOMtype()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOMtype() - m_Mtype));
-		}
-		if (this->m_top->getOGsize() != m_Gsize) {
-			aggG += ((m_Gsize < this->m_top->getOGsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOGsize() - m_Gsize));
-		}
+	auto aggCalcOld = [&aggSyn, &aggC, &aggV, &aggM, &aggG,&thiscell, this](Cell* neighbor) {
+		if (neighbor != nullptr) {
+			std::vector<float> top{ static_cast<float>(neighbor->getOsyntaxPos()),neighbor->getOCsize(),neighbor->getOVsize(),neighbor->getOGsize(),neighbor->getOMtype() };
+			float cossim = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), top.begin(), 0.0f) / (vecnorm5d(thiscell) * vecnorm5d(top)));
+			if (neighbor->getOsyntaxPos() != m_syntaxPos) {
+				aggSyn += ((m_syntaxPos < neighbor->getOsyntaxPos()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getOCsize() != m_Csize) {
+				aggC += ((m_Csize < neighbor->getOCsize()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getOVsize() != m_Vsize) {
+				aggV += ((m_Vsize < neighbor->getOVsize()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getOMtype() != m_Mtype) {
+				aggM += ((m_Mtype < neighbor->getOMtype()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getOGsize() != m_Gsize) {
+				aggG += ((m_Gsize < neighbor->getOGsize()) ? +1 : -1) * cossim;
+			}
 
-	}
-	float cossimbot = -1;
-	if (this->m_bottom != nullptr) {
-		std::vector<float> bot{ static_cast<float>(this->m_bottom->getsyntaxPos()),this->m_bottom->getCsize(),this->m_bottom->getVsize(),this->m_bottom->getGsize(),this->m_bottom->getMtype() };
-		cossimbot = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), bot.begin(), 0.0f) / (vecnorm5d(thiscell)*vecnorm5d(bot)));
-		if (this->m_bottom->getsyntaxPos() != m_syntaxPos) {
-			aggSyn += ((m_syntaxPos < this->m_bottom->getsyntaxPos()) ? +1 : -1) * cossimbot / (std::abs(this->m_bottom->getsyntaxPos() - m_syntaxPos));
 		}
-		if (this->m_bottom->getCsize() != m_Csize) {
-			aggC += ((m_Csize < this->m_bottom->getCsize()) ? +1 : -1) * cossimbot / (std::abs(this->m_bottom->getCsize() - m_Csize));
-		}
-		if (this->m_bottom->getVsize() != m_Vsize) {
-			aggV += ((m_Vsize < this->m_bottom->getVsize()) ? +1 : -1) * cossimbot / (std::abs(this->m_bottom->getVsize() - m_Vsize));
-		}
-		if (this->m_bottom->getMtype() != m_Mtype) {
-			aggM += ((m_Mtype < this->m_bottom->getMtype()) ? +1 : -1) * cossimbot / (std::abs(this->m_bottom->getMtype() - m_Mtype));
-		}
-		if (this->m_bottom->getGsize() != m_Gsize) {
-			aggG += ((m_Gsize < this->m_bottom->getGsize()) ? +1 : -1) * cossimbot / (std::abs(this->m_bottom->getGsize() - m_Gsize));
-		}
-	}
-	float cossimleft = -1;
-	if (this->m_left != nullptr) {
-		std::vector<float> left{ static_cast<float>(this->m_left->getOsyntaxPos()),this->m_left->getOCsize(),this->m_left->getOVsize(),this->m_left->getOGsize(),this->m_left->getOMtype() };
-		cossimleft = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), left.begin(), 0.0f) / (vecnorm5d(thiscell)*vecnorm5d(left)));
-		if (this->m_left->getOsyntaxPos() != m_syntaxPos) {
-			aggSyn += ((m_syntaxPos < this->m_left->getOsyntaxPos()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOsyntaxPos() - m_syntaxPos));
-		}
-		if (this->m_left->getOCsize() != m_Csize) {
-			aggC += ((m_Csize < this->m_left->getOCsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOCsize() - m_Csize));
-		}
-		if (this->m_left->getOVsize() != m_Vsize) {
-			aggV += ((m_Vsize < this->m_left->getOVsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOVsize() - m_Vsize));
-		}
-		if (this->m_left->getOMtype() != m_Mtype) {
-			aggM += ((m_Mtype < this->m_left->getOMtype()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOMtype() - m_Mtype));
-		}
-		if (this->m_left->getOGsize() != m_Gsize) {
-			aggG += ((m_Gsize < this->m_left->getOGsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOGsize() - m_Gsize));
-		}
+	};
+	auto aggCalc = [&aggSyn, &aggC, &aggV, &aggM, &aggG, &thiscell, this](Cell* neighbor) {
+		if (neighbor != nullptr) {
+			std::vector<float> top{ static_cast<float>(neighbor->getsyntaxPos()),neighbor->getCsize(),neighbor->getVsize(),neighbor->getGsize(),neighbor->getMtype() };
+			float cossim = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), top.begin(), 0.0f) / (vecnorm5d(thiscell) * vecnorm5d(top)));
+			if (neighbor->getsyntaxPos() != m_syntaxPos) {
+				aggSyn += ((m_syntaxPos < neighbor->getsyntaxPos()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getCsize() != m_Csize) {
+				aggC += ((m_Csize < neighbor->getCsize()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getVsize() != m_Vsize) {
+				aggV += ((m_Vsize < neighbor->getVsize()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getMtype() != m_Mtype) {
+				aggM += ((m_Mtype < neighbor->getMtype()) ? +1 : -1) * cossim;
+			}
+			if (neighbor->getGsize() != m_Gsize) {
+				aggG += ((m_Gsize < neighbor->getGsize()) ? +1 : -1) * cossim;
+			}
 
-	}
-	float cossimright = -1;
-	if (this->m_right != nullptr) {
-		std::vector<float> right{ static_cast<float>(this->m_right->getsyntaxPos()),this->m_right->getCsize(),this->m_right->getVsize(),this->m_right->getGsize(),this->m_right->getMtype() };
-		cossimright = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), right.begin(), 0.0f) / (vecnorm5d(thiscell)*vecnorm5d(right)));
-		if (this->m_right->getsyntaxPos() != m_syntaxPos) {
-			aggSyn += ((m_syntaxPos < this->m_right->getsyntaxPos()) ? +1 : 1) * cossimright / (std::abs(this->m_right->getsyntaxPos() - m_syntaxPos));
 		}
-		if (this->m_right->getCsize() != m_Csize) {
-			aggC += ((m_Csize < this->m_right->getCsize()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getCsize() - m_Csize));
-		}
-		if (this->m_right->getVsize() != m_Vsize) {
-			aggV += ((m_Vsize < this->m_right->getVsize()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getVsize() - m_Vsize));
-		}
-		if (this->m_right->getMtype() != m_Mtype) {
-			aggM += ((m_Mtype < this->m_right->getMtype()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getMtype() - m_Mtype));
-		}
-		if (this->m_right->getGsize() != m_Gsize) {
-			aggG += ((m_Gsize < this->m_right->getGsize()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getGsize() - m_Gsize));
-		}
-	}
-
+	};
+	aggCalcOld(this->m_top);
+	aggCalcOld(this->m_left);
+	aggCalc(this->m_right);
+	aggCalc(this->m_bottom);
+	
 	this->store();
 
 	m_syntaxPos = static_cast<SynPos>(std::abs((m_syntaxPos + (int)aggSyn) % 6));
