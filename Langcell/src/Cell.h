@@ -32,6 +32,11 @@ private:
 	unsigned int m_x, m_y;
 	Cell* m_top, *m_bottom, *m_right, *m_left;
 	bool m_water;
+	struct {
+		SynPos m_syntaxPos;
+		float m_Csize, m_Vsize, m_Mtype, m_Gsize;
+	} old;
+
 public:
 	Cell(bool rand);
 	Cell(SynPos m_syntaxPos, float m_Csize, float m_Vsize, float m_Mtype, float m_Gsize);
@@ -43,17 +48,20 @@ public:
 	inline void setWater(bool water) { m_water = water; }
 
 	void mutate(float rate);
-	/**
-	This function returns a n
-	*/
 	Cell* createEvolution(float rate, float closeness);
+	void store();
 
 	RGBAstr getColor() const;
 
-	inline bool isWater() const { return m_water; }
-	inline SynPos getsyntaxPos()const	{ return m_syntaxPos; }
-	inline float getCsize()const { return m_Csize; }
-	inline float getVsize()const { return m_Vsize; }
-	inline float getMtype()const { return m_Mtype; }
-	inline float getGsize()const { return m_Gsize; }
+	bool isWater() const { return m_water; }
+	SynPos getsyntaxPos()const	{ return m_syntaxPos; }
+	float getCsize()const { return m_Csize; }
+	float getVsize()const { return m_Vsize; }
+	float getMtype()const { return m_Mtype; }
+	float getGsize()const { return m_Gsize; }
+	SynPos getOsyntaxPos()const { return old.m_syntaxPos; }
+	float getOCsize()const { return old.m_Csize; }
+	float getOVsize()const { return old.m_Vsize; }
+	float getOMtype()const { return old.m_Mtype; }
+	float getOGsize()const { return old.m_Gsize; }
 };

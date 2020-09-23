@@ -136,15 +136,16 @@ void Texture::Refresh(unsigned int speed,float mutation, float closeness)
 	}
 	for (int i = 0; i < m_Height; i++) {
 		for (int j = 0; j < m_Width; j += 1) {
-			int pos = i * m_Width * 4 + j * 4;
-			if (m_update >= speed) {
-				cells.at(i).at(j)->createEvolution(mutation,closeness);
-
-			}
-			if (m_LocalBuffer[pos + 3] == 255) {
-				m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
-				m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j)->getColor().green;
-				m_LocalBuffer[pos + 2] = (unsigned char)cells.at(i).at(j)->getColor().blue;
+			if (!cells.at(i).at(j)->isWater()) {
+				int pos = i * m_Width * 4 + j * 4;
+				if (m_update >= speed) {
+					cells.at(i).at(j)->createEvolution(mutation, closeness);
+				}
+				if (m_LocalBuffer[pos + 3] == 255) {
+					m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
+					m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j)->getColor().green;
+					m_LocalBuffer[pos + 2] = (unsigned char)cells.at(i).at(j)->getColor().blue;
+				}
 			}
 		}
 	}

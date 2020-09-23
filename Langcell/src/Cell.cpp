@@ -23,22 +23,24 @@ Cell::Cell(bool rand)
 
 		
 		int randomsyntax = rsyn(gen);
-		m_syntaxPos = static_cast<SynPos>(randomsyntax);
-		m_Csize = rC(gen);
-		m_Vsize = rV(gen);
-		m_Mtype = rM(gen);
-		m_Gsize = rG(gen);
+		old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(randomsyntax);
+		old.m_Csize = m_Csize = rC(gen);
+		old.m_Vsize = m_Vsize = rV(gen);
+		old.m_Mtype = m_Mtype = rM(gen);
+		old.m_Gsize = m_Gsize = rG(gen);
+
+		
 	}
 }
 
 Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
-	:m_syntaxPos(syntaxPos),m_Csize(Csize),m_Vsize(Vsize),m_Mtype(Mtype),m_Gsize(Gsize)
 {
 	/*Bound checking*/
-	m_Csize = Csize < 8 ? 8 : (Csize > 100 ? 100: Csize);
-	m_Vsize = Vsize < 3 ? 3 : (Vsize > 50 ? 50 : Vsize);
-	m_Mtype = Mtype > 50 ? 50 : (Mtype < 0 ? 0 : Mtype);
-	m_Gsize = Gsize > 20 ? 20 : (Gsize < 0 ? 0 : Gsize);
+	old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(std::abs(syntaxPos % 6));
+	old.m_Csize = m_Csize = Csize < 8 ? 8 : (Csize > 100 ? 100 : Csize);
+	old.m_Vsize = m_Vsize = Vsize < 3 ? 3 : (Vsize > 50 ? 50 : Vsize);
+	old.m_Mtype = m_Mtype = Mtype > 50 ? 50 : (Mtype < 0 ? 0 : Mtype);
+	old.m_Gsize = m_Gsize = Gsize > 20 ? 20 : (Gsize < 0 ? 0 : Gsize);
 }
 
 
@@ -54,7 +56,7 @@ RGBAstr Cell::getColor() const
 	/*Normalize colors*/
 	red = red  /50 ;
 	green = (green - 8) / (100 - 8);
-	blue = (blue - 3) / (5 - 3);
+	blue = (blue - 3) / (50 - 3);
 
 	unsigned int red_255 = red * (float)255;
 	unsigned int green_255 = green * (float)255;
@@ -104,10 +106,6 @@ void Cell::mutate(float rate)
 	else {
 		m_Gsize = m_Gsize - rate;
 	}
-	m_Csize = m_Csize < 8 ? 8 : (m_Csize > 100 ? 100 : m_Csize);
-	m_Vsize = m_Vsize < 3 ? 3 : (m_Vsize > 50 ? 50 : m_Vsize);
-	m_Mtype = m_Mtype > 50 ? 50 : (m_Mtype < 0 ? 0 : m_Mtype);
-	m_Gsize = m_Gsize > 20 ? 20 : (m_Gsize < 0 ? 0 : m_Gsize);
 }
 
 Cell* Cell::createEvolution(float rate,float closeness)
@@ -117,22 +115,22 @@ Cell* Cell::createEvolution(float rate,float closeness)
 	float cossimtop = -1;
 	float aggSyn = 0, aggC = 0, aggV = 0, aggM = 0, aggG = 0;
 	if (this->m_top != nullptr) {
-		std::vector<float> top{ static_cast<float>(this->m_top->getsyntaxPos()),this->m_top->getCsize(),this->m_top->getVsize(),this->m_top->getGsize(),this->m_top->getMtype() };
+		std::vector<float> top{ static_cast<float>(this->m_top->getOsyntaxPos()),this->m_top->getOCsize(),this->m_top->getOVsize(),this->m_top->getOGsize(),this->m_top->getOMtype() };
 		cossimtop = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), top.begin(), 0.0f) / (vecnorm5d(thiscell)*vecnorm5d(top)));
-		if (this->m_top->getsyntaxPos() != m_syntaxPos) {
-			aggSyn += ((m_syntaxPos < this->m_top->getsyntaxPos()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getsyntaxPos() - m_syntaxPos));
+		if (this->m_top->getOsyntaxPos() != m_syntaxPos) {
+			aggSyn += ((m_syntaxPos < this->m_top->getOsyntaxPos()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOsyntaxPos() - m_syntaxPos));
 		}
-		if (this->m_top->getCsize() != m_Csize) {
-			aggC += ((m_Csize < this->m_top->getCsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getCsize() - m_Csize));
+		if (this->m_top->getOCsize() != m_Csize) {
+			aggC += ((m_Csize < this->m_top->getOCsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOCsize() - m_Csize));
 		}
-		if (this->m_top->getVsize() != m_Vsize) {
-			aggV += ((m_Vsize < this->m_top->getVsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getVsize() - m_Vsize));
+		if (this->m_top->getOVsize() != m_Vsize) {
+			aggV += ((m_Vsize < this->m_top->getOVsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOVsize() - m_Vsize));
 		}
-		if (this->m_top->getMtype() != m_Mtype) {
-			aggM += ((m_Mtype < this->m_top->getMtype()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getMtype() - m_Mtype));
+		if (this->m_top->getOMtype() != m_Mtype) {
+			aggM += ((m_Mtype < this->m_top->getOMtype()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOMtype() - m_Mtype));
 		}
-		if (this->m_top->getGsize() != m_Gsize) {
-			aggG += ((m_Gsize < this->m_top->getGsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getGsize() - m_Gsize));
+		if (this->m_top->getOGsize() != m_Gsize) {
+			aggG += ((m_Gsize < this->m_top->getOGsize()) ? +1 : -1) * cossimtop / (std::abs(this->m_top->getOGsize() - m_Gsize));
 		}
 
 	}
@@ -158,22 +156,22 @@ Cell* Cell::createEvolution(float rate,float closeness)
 	}
 	float cossimleft = -1;
 	if (this->m_left != nullptr) {
-		std::vector<float> left{ static_cast<float>(this->m_left->getsyntaxPos()),this->m_left->getCsize(),this->m_left->getVsize(),this->m_left->getGsize(),this->m_left->getMtype() };
+		std::vector<float> left{ static_cast<float>(this->m_left->getOsyntaxPos()),this->m_left->getOCsize(),this->m_left->getOVsize(),this->m_left->getOGsize(),this->m_left->getOMtype() };
 		cossimleft = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), left.begin(), 0.0f) / (vecnorm5d(thiscell)*vecnorm5d(left)));
-		if (this->m_left->getsyntaxPos() != m_syntaxPos) {
-			aggSyn += ((m_syntaxPos < this->m_left->getsyntaxPos()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getsyntaxPos() - m_syntaxPos));
+		if (this->m_left->getOsyntaxPos() != m_syntaxPos) {
+			aggSyn += ((m_syntaxPos < this->m_left->getOsyntaxPos()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOsyntaxPos() - m_syntaxPos));
 		}
-		if (this->m_left->getCsize() != m_Csize) {
-			aggC += ((m_Csize < this->m_left->getCsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getCsize() - m_Csize));
+		if (this->m_left->getOCsize() != m_Csize) {
+			aggC += ((m_Csize < this->m_left->getOCsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOCsize() - m_Csize));
 		}
-		if (this->m_left->getVsize() != m_Vsize) {
-			aggV += ((m_Vsize < this->m_left->getVsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getVsize() - m_Vsize));
+		if (this->m_left->getOVsize() != m_Vsize) {
+			aggV += ((m_Vsize < this->m_left->getOVsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOVsize() - m_Vsize));
 		}
-		if (this->m_left->getMtype() != m_Mtype) {
-			aggM += ((m_Mtype < this->m_left->getMtype()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getMtype() - m_Mtype));
+		if (this->m_left->getOMtype() != m_Mtype) {
+			aggM += ((m_Mtype < this->m_left->getOMtype()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOMtype() - m_Mtype));
 		}
-		if (this->m_left->getGsize() != m_Gsize) {
-			aggG += ((m_Gsize < this->m_left->getGsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getGsize() - m_Gsize));
+		if (this->m_left->getOGsize() != m_Gsize) {
+			aggG += ((m_Gsize < this->m_left->getOGsize()) ? +1 : -1) * cossimleft / (std::abs(this->m_left->getOGsize() - m_Gsize));
 		}
 
 	}
@@ -185,18 +183,20 @@ Cell* Cell::createEvolution(float rate,float closeness)
 			aggSyn += ((m_syntaxPos < this->m_right->getsyntaxPos()) ? +1 : 1) * cossimright / (std::abs(this->m_right->getsyntaxPos() - m_syntaxPos));
 		}
 		if (this->m_right->getCsize() != m_Csize) {
-			aggC += ((m_Csize < this->m_right->getCsize()) ? +1 : 1) * cossimright / (std::abs(this->m_right->getCsize() - m_Csize));
+			aggC += ((m_Csize < this->m_right->getCsize()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getCsize() - m_Csize));
 		}
 		if (this->m_right->getVsize() != m_Vsize) {
-			aggV += ((m_Vsize < this->m_right->getVsize()) ? +1 : 1) * cossimright / (std::abs(this->m_right->getVsize() - m_Vsize));
+			aggV += ((m_Vsize < this->m_right->getVsize()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getVsize() - m_Vsize));
 		}
 		if (this->m_right->getMtype() != m_Mtype) {
-			aggM += ((m_Mtype < this->m_right->getMtype()) ? +1 : 1) * cossimright / (std::abs(this->m_right->getMtype() - m_Mtype));
+			aggM += ((m_Mtype < this->m_right->getMtype()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getMtype() - m_Mtype));
 		}
 		if (this->m_right->getGsize() != m_Gsize) {
-			aggG += ((m_Gsize < this->m_right->getGsize()) ? +1 : 1) * cossimright / (std::abs(this->m_right->getGsize() - m_Gsize));
+			aggG += ((m_Gsize < this->m_right->getGsize()) ? +1 : -1) * cossimright / (std::abs(this->m_right->getGsize() - m_Gsize));
 		}
 	}
+
+	this->store();
 
 	m_syntaxPos = static_cast<SynPos>(std::abs((m_syntaxPos + (int)aggSyn) % 6));
 	m_Csize = m_Csize + aggC;
@@ -205,5 +205,16 @@ Cell* Cell::createEvolution(float rate,float closeness)
 	m_Gsize = m_Gsize + aggG;
 
 	mutate(rate);
+	m_Csize = m_Csize < 8 ? 8 : (m_Csize > 100 ? 100 : m_Csize);
+	m_Vsize = m_Vsize < 3 ? 3 : (m_Vsize > 50 ? 50 : m_Vsize);
+	m_Mtype = m_Mtype > 50 ? 50 : (m_Mtype < 0 ? 0 : m_Mtype);
+	m_Gsize = m_Gsize > 20 ? 20 : (m_Gsize < 0 ? 0 : m_Gsize);
 	return nullptr;
+}
+void Cell::store() {
+	old.m_Csize = m_Csize;
+	old.m_Vsize = m_Vsize;
+	old.m_Mtype = m_Mtype;
+	old.m_Gsize = m_Gsize;
+	old.m_syntaxPos = m_syntaxPos;
 }

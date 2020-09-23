@@ -20,7 +20,8 @@ public:
 
 	void Refresh(unsigned int speed, float mutation, float closeness);
 
-	inline int GetWidth() const { return m_Width; }
-	inline int GetHeight() const { return m_Height; }
+	Cell* getCell(int x, int y) { return cells.at(cells.size() -1 - y).at(x); }
+	int GetWidth() const { return m_Width; }
+	int GetHeight() const { return m_Height; }
 
 };

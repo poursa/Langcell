@@ -16,6 +16,16 @@
 #include "imgui/imgui.h"
 #include "imgui//imgui_impl_glfw_gl3.h"
 
+#define G_WIDTH  1000
+#define G_HEIGHT 1000
+
+int g_xpos = 0, g_ypos = 0;
+
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+
+
+
 int main(void)
 {
 	GLFWwindow* window;
@@ -25,7 +35,7 @@ int main(void)
 		return -1;
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(1000, 1000, "Langcell", NULL, NULL);
+	window = glfwCreateWindow(G_WIDTH, G_HEIGHT, "Langcell", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
@@ -43,6 +53,8 @@ int main(void)
 	}
 	
 	std::cout << glGetString(GL_VERSION) << std::endl;
+
+
 
 	
 	{
@@ -80,13 +92,13 @@ int main(void)
 
 
 		glm::mat4 mvp = proj * view * model;
-
+		
 		Shader shader("res/shaders/Basic.shader");
 		shader.Bind();
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
-		Texture texture("res/textures/worldmapnew.png");
+		Texture texture("res/textures/debugmap.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/
@@ -94,7 +106,7 @@ int main(void)
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
-
+		
 		/*Renderer initialized*/
 		Renderer renderer;
 
@@ -102,11 +114,13 @@ int main(void)
 		ImGui::CreateContext();
 		ImGui_ImplGlfwGL3_Init(window, true);
 		ImGui::StyleColorsDark();
-
+		glfwSetMouseButtonCallback(window, mouse_button_callback);
+		glfwSetCursorPosCallback(window, cursor_position_callback);
 
 		int speed = 50;
 		float mutation = 0.0f;
 		float closeness = 0.5f;
+		int red = 0, green = 0, blue = 0;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -117,19 +131,22 @@ int main(void)
 
 
 			shader.Bind();
-			//shader.SetUniform4f("u_Color", red, 0.3f, 0.8f, 1.0f);
-
 			renderer.Draw(va, ib, shader);
 
 			texture.Refresh(speed,mutation,closeness);
 			shader.SetUniform1i("u_Texture", 0);
+			
 
-			{                       
-				ImGui::SliderInt("Speed", &speed, 0, 100);
+			red = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()) , g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().red;
+			green = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().green;
+			blue = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().blue;
+
+			{
+				ImGui::SliderInt("Speed", &speed, 0, 1000);
 				ImGui::SliderFloat("Mutation", &mutation, 0.0f, 10.0f);
 				ImGui::SliderFloat("Closeness", &closeness, 0.0f, 1.0f);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-				
+				ImGui::Text("R: %d G: %d B: %d", red , green, blue);
 			}
 
 			ImGui::Render();
@@ -145,4 +162,16 @@ int main(void)
 	ImGui_ImplGlfwGL3_Shutdown();
 	ImGui::DestroyContext();
 	glfwTerminate();
+}
+
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		double l_xpos, l_ypos;
+		glfwGetCursorPos(window, &l_xpos, &l_ypos);
+		g_xpos = (int)l_xpos;
+		g_ypos = (int)l_ypos;
+	}
+}
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
 }
