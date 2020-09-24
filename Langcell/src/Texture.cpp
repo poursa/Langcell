@@ -156,3 +156,12 @@ void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 		stbi_image_free(m_LocalBuffer);
 	}
 }
+Cell* Texture::getCell(int x, int y)
+{ 
+	if (x <= m_Width && y <= m_Height && x >= 0 && y >= 0) {
+		return cells.at(cells.size() - 1 - y).at(x);
+	}
+	else {
+		return cells.at(0).at(0);
+	}
+}

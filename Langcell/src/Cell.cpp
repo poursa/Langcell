@@ -171,12 +171,15 @@ void Cell::createEvolution(float rate,int conserve)
 		m_Mtype = m_Mtype + aggM;
 		m_Gsize = m_Gsize + aggG;
 
+
 		mutate(rate);
 		m_Csize = m_Csize < 8 ? 8 : (m_Csize > 100 ? 100 : m_Csize);
 		m_Vsize = m_Vsize < 3 ? 3 : (m_Vsize > 50 ? 50 : m_Vsize);
 		m_Mtype = m_Mtype > 50 ? 50 : (m_Mtype < 0 ? 0 : m_Mtype);
 		m_Gsize = m_Gsize > 20 ? 20 : (m_Gsize < 0 ? 0 : m_Gsize);
 	}
+	
+	
 }
 void Cell::store() {
 	old.m_Csize = m_Csize;

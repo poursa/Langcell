@@ -16,8 +16,8 @@
 #include "imgui/imgui.h"
 #include "imgui//imgui_impl_glfw_gl3.h"
 
-#define G_WIDTH  1000
-#define G_HEIGHT 1000
+#define G_WIDTH  1000.f
+#define G_HEIGHT 1000.f
 
 int g_xpos = 0, g_ypos = 0;
 
@@ -36,6 +36,7 @@ int main(void)
 
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(G_WIDTH, G_HEIGHT, "Langcell", NULL, NULL);
+	glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, G_WIDTH, G_HEIGHT);
 	if (!window)
 	{
 		glfwTerminate();
@@ -98,7 +99,7 @@ int main(void)
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
-		Texture texture("res/textures/worldmap.png");
+		Texture texture("res/textures/worldmapnew.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/
@@ -106,7 +107,6 @@ int main(void)
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
-		
 		/*Renderer initialized*/
 		Renderer renderer;
 
@@ -121,6 +121,7 @@ int main(void)
 		float mutation = 0.0f;
 		int conserve = 0;
 		int red = 0, green = 0, blue = 0;
+		int position_x = 0, position_y = 0;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -135,9 +136,11 @@ int main(void)
 
 			texture.Refresh(speed,mutation,conserve);
 			shader.SetUniform1i("u_Texture", 0);
-			
 
-			red = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()) , g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().red;
+
+			position_x = g_xpos / (G_WIDTH / texture.GetWidth());
+			position_y = g_ypos / (G_HEIGHT / texture.GetHeight());
+			red = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().red;
 			green = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().green;
 			blue = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().blue;
 
