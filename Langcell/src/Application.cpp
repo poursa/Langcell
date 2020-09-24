@@ -98,7 +98,7 @@ int main(void)
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
-		Texture texture("res/textures/worldmapnew.png");
+		Texture texture("res/textures/worldmap.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/
@@ -119,6 +119,7 @@ int main(void)
 
 		int speed = 50;
 		float mutation = 0.0f;
+		int conserve = 0;
 		int red = 0, green = 0, blue = 0;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
@@ -132,7 +133,7 @@ int main(void)
 			shader.Bind();
 			renderer.Draw(va, ib, shader);
 
-			texture.Refresh(speed,mutation);
+			texture.Refresh(speed,mutation,conserve);
 			shader.SetUniform1i("u_Texture", 0);
 			
 
@@ -142,6 +143,7 @@ int main(void)
 
 			{
 				ImGui::SliderInt("Speed", &speed, 0, 1000);
+				ImGui::SliderInt("Conservation", &conserve, 0, 1000);
 				ImGui::SliderFloat("Mutation", &mutation, 0.0f, 10.0f);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("R: %d G: %d B: %d", red , green, blue);

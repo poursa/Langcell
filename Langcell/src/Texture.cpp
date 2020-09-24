@@ -119,7 +119,7 @@ void Texture::Unbind() const
 	GLCall(glBindTexture(GL_TEXTURE_2D,0));
 }
 
-void Texture::Refresh(unsigned int speed,float mutation)
+void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 {
 	stbi_set_flip_vertically_on_load(1);
 	m_LocalBuffer = stbi_load(m_FilePath.c_str(), &m_Width, &m_Height, &m_BPP, 4);
@@ -138,7 +138,7 @@ void Texture::Refresh(unsigned int speed,float mutation)
 			if (!cells.at(i).at(j)->isWater()) {
 				int pos = i * m_Width * 4 + j * 4;
 				if (m_update >= speed) {
-					cells.at(i).at(j)->createEvolution(mutation);
+					cells.at(i).at(j)->createEvolution(mutation,conserve);
 				}
 				if (m_LocalBuffer[pos + 3] == 255) {
 					m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
