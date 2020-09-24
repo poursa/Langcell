@@ -13,8 +13,7 @@ Texture::Texture(const std::string & path)
 		std::vector<Cell*> row;
 		for (int j = 0; j < m_Width; j += 1) {
 			int pos = i * m_Width * 4 + j*4;
-			Cell* cell = new Cell(true);
-			cell->setCoords(i, j);
+			Cell* cell = new Cell();
 			if (m_LocalBuffer[pos + 3] == 255) {
 				m_LocalBuffer[pos] = (unsigned char)cell->getColor().red;
 				m_LocalBuffer[pos + 1] = (unsigned char)cell->getColor().green;

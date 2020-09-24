@@ -9,10 +9,10 @@
 
 float maxtot = -2;
 float mintot = 2;
-Cell::Cell(bool rand)
-	:m_syntaxPos(SynPos::SVO), m_Csize(8), m_Vsize(3), m_Mtype(0), m_Gsize(0)
+Cell::Cell()
+	:m_right(nullptr),m_top(nullptr),m_left(nullptr),m_bottom(nullptr),m_water(false)
 {
-	if (rand) {
+	
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<> rsyn(0, 5);
@@ -30,10 +30,11 @@ Cell::Cell(bool rand)
 		old.m_Gsize = m_Gsize = static_cast<float>(rG(gen));
 
 		
-	}
+	
 }
 
 Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
+	:m_right(nullptr), m_top(nullptr), m_left(nullptr), m_bottom(nullptr), m_water(false)
 {
 	/*Bound checking*/
 	old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(std::abs(syntaxPos % 6)); //3 bits
