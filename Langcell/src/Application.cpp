@@ -19,11 +19,12 @@
 #define G_WIDTH  1000.f
 #define G_HEIGHT 1000.f
 
+int g_yscroll = 0;
 int g_xpos = 0, g_ypos = 0;
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
-
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 
 int main(void)
@@ -87,7 +88,8 @@ int main(void)
 		va.AddBuffer(vb, layout);
 		IndexBuffer ib(indices, 6);
 
-		glm::mat4 proj = glm::ortho(-1.0f,1.0f,-1.0f, 1.0f, -1.0f,1.0f);
+		float left = -1.0f, right = 1.0f, top = 1.0f, bottom = -1.0f;
+		glm::mat4 proj = glm::ortho(left, right, bottom, top, -1.0f,1.0f);
 		glm::mat4 view = glm::translate(glm::mat4(1.0f),glm::vec3(0,0,0));
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 
@@ -116,12 +118,14 @@ int main(void)
 		ImGui::StyleColorsDark();
 		glfwSetMouseButtonCallback(window, mouse_button_callback);
 		glfwSetCursorPosCallback(window, cursor_position_callback);
+		glfwSetScrollCallback(window, scroll_callback);
 
 		int speed = 50;
 		float mutation = 0.0f;
 		int conserve = 0;
 		int red = 0, green = 0, blue = 0;
 		int position_x = 0, position_y = 0;
+		float zoomspeed = 1.5f;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -155,6 +159,24 @@ int main(void)
 			ImGui::Render();
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
+			/*Zoom*/
+			
+			if (g_yscroll != 0) {
+				if (g_yscroll > 0) {
+					/*TODO: Zoom where mouse is pointed at
+					*/
+
+					left = left / zoomspeed, right = right / zoomspeed, top =top / zoomspeed, bottom =bottom / zoomspeed;
+				}
+				else {
+					left = left * zoomspeed, right = right * zoomspeed, top = top * zoomspeed, bottom = bottom * zoomspeed;
+				}
+				std::cout << left << "" << right << "" << top << "" << bottom << std::endl;
+				proj = glm::ortho(left, right, bottom, top);
+				mvp = proj * view * model;
+				shader.SetUniformMat4f("u_MVP", mvp);
+				g_yscroll = 0;
+			}
 			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
 
@@ -177,4 +199,12 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 }
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
+}
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	double l_xpos, l_ypos;
+	glfwGetCursorPos(window, &l_xpos, &l_ypos);
+	g_xpos = (int)l_xpos;
+	g_ypos = (int)l_ypos;
+	g_yscroll = yoffset;
 }

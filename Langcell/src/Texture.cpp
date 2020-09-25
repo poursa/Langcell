@@ -11,14 +11,30 @@ Texture::Texture(const std::string & path)
 	std::cout << m_Height << m_Width << std::endl;
 	for (int i = 0; i < m_Height; i++) {
 		std::vector<Cell*> row;
-		for (int j = 0; j < m_Width; j += 1) {
+		for (int j = 0; j < m_Width; j++) {
 			int pos = i * m_Width * 4 + j*4;
 			Cell* cell = new Cell();
-			if (m_LocalBuffer[pos + 3] == 255) {
+			if (m_LocalBuffer[pos] == 0 && m_LocalBuffer[pos + 1] == 0 && m_LocalBuffer[pos + 2] == 0 && m_LocalBuffer[pos + 3] == 255) {
 				m_LocalBuffer[pos] = (unsigned char)cell->getColor().red;
 				m_LocalBuffer[pos + 1] = (unsigned char)cell->getColor().green;
 				m_LocalBuffer[pos + 2] = (unsigned char)cell->getColor().blue;
-				cell->setWater(false);
+			}
+			else if(m_LocalBuffer[pos] == 1 && m_LocalBuffer[pos + 1] == 38 && m_LocalBuffer[pos + 2] == 255 && m_LocalBuffer[pos + 3] == 255){
+				cell->setWater(true);
+			}
+			else if (m_LocalBuffer[pos + 3] == 100) {
+				m_LocalBuffer[pos] = (unsigned char)cell->getColor().red;
+				m_LocalBuffer[pos + 1] = (unsigned char)cell->getColor().green;
+				m_LocalBuffer[pos + 2] = (unsigned char)cell->getColor().blue;
+				m_LocalBuffer[pos + 3] = 255;
+				cell->setRiver(true);
+			}
+			else if(m_LocalBuffer[pos] == 150 && m_LocalBuffer[pos + 1] == 80 && m_LocalBuffer[pos + 2] == 0 && m_LocalBuffer[pos + 3] == 255) {
+				m_LocalBuffer[pos] = (unsigned char)cell->getColor().red;
+				m_LocalBuffer[pos + 1] = (unsigned char)cell->getColor().green;
+				m_LocalBuffer[pos + 2] = (unsigned char)cell->getColor().blue;
+				m_LocalBuffer[pos + 3] = 255;
+				cell->setMount(true);
 			}
 			else {
 				cell->setWater(true);
@@ -79,11 +95,6 @@ Texture::Texture(const std::string & path)
 				}
 				cells.at(i).at(j)->setNeighbors(topn, botn, rightn, leftn);
 			}
-			if (m_LocalBuffer[pos + 3] == 255) {
-				m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
-				m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j)->getColor().green;
-				m_LocalBuffer[pos + 2] = (unsigned char)cells.at(i).at(j)->getColor().blue;
-			}
 		}
 	}
 	GLCall(glGenTextures(1,&m_RendererID));
@@ -98,9 +109,7 @@ Texture::Texture(const std::string & path)
 	GLCall(glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_Width,m_Height,0,GL_RGBA,GL_UNSIGNED_BYTE,m_LocalBuffer));
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 
-	if (m_LocalBuffer) {
-		stbi_image_free(m_LocalBuffer);
-	}
+	
 }
 
 Texture::~Texture()
@@ -121,10 +130,6 @@ void Texture::Unbind() const
 
 void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 {
-	stbi_set_flip_vertically_on_load(1);
-	m_LocalBuffer = stbi_load(m_FilePath.c_str(), &m_Width, &m_Height, &m_BPP, 4);
-
-	
 	/*Affect Cells*/
 	/*Refresh*/
 	if (m_update >= speed) {
@@ -134,34 +139,32 @@ void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 		m_update++;
 	}
 	for (int i = 0; i < m_Height; i++) {
-		for (int j = 0; j < m_Width; j += 1) {
+		for (int j = 0; j < m_Width; j++) {
 			if (!cells.at(i).at(j)->isWater()) {
 				int pos = i * m_Width * 4 + j * 4;
 				if (m_update >= speed) {
 					cells.at(i).at(j)->createEvolution(mutation,conserve);
 				}
-				if (m_LocalBuffer[pos + 3] == 255) {
-					m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
-					m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j)->getColor().green;
-					m_LocalBuffer[pos + 2] = (unsigned char)cells.at(i).at(j)->getColor().blue;
-				}
+				m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
+				m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j)->getColor().green;
+				m_LocalBuffer[pos + 2] = (unsigned char)cells.at(i).at(j)->getColor().blue;
 			}
 		}
 	}
 
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer));
-	
-	if (m_LocalBuffer) {
-		stbi_image_free(m_LocalBuffer);
-	}
 }
 Cell* Texture::getCell(int x, int y)
 { 
 	if (x <= m_Width && y <= m_Height && x >= 0 && y >= 0) {
 		return cells.at(cells.size() - 1 - y).at(x);
 	}
-	else {
-		return cells.at(0).at(0);
-	}
+	return cells.at(0).at(0);
 }
+//bool Texture::isDrawable(int pos) {
+//	if (m_LocalBuffer[pos + 3] == 100 || (m_LocalBuffer[pos] == 0 && m_LocalBuffer[pos + 1] == 0 && m_LocalBuffer[pos + 2] == 0 && m_LocalBuffer[pos + 3] == 255)) {
+//		return true;
+//	}
+//	return false;
+//}

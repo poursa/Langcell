@@ -18,10 +18,11 @@ public:
 	void Bind(unsigned int slot = 0) const;
 	void Unbind() const;
 
+	//bool isDrawable(int pos);
 	void Refresh(unsigned int speed, float mutation, int conserve);
 
 	Cell* getCell(int x, int y);
 	int GetWidth() const { return m_Width; }
 	int GetHeight() const { return m_Height; }
-
+	
 };

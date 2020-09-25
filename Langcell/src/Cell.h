@@ -30,12 +30,12 @@ private:
 	SynPos m_syntaxPos;
 	float m_Csize,m_Vsize,m_Mtype,m_Gsize;
 	Cell* m_top, *m_bottom, *m_right, *m_left;
-	bool m_water;
+	bool m_water,m_river,m_mount;
 	struct {
 		SynPos m_syntaxPos;
 		float m_Csize, m_Vsize, m_Mtype, m_Gsize;
 	} old;
-
+	
 public:
 	Cell();
 	Cell(SynPos m_syntaxPos, float m_Csize, float m_Vsize, float m_Mtype, float m_Gsize);
@@ -45,14 +45,17 @@ public:
 	//inline void setCoords(unsigned int x, unsigned int y) { m_x = x; m_y = y; }
 	inline void setNeighbors(Cell* top, Cell* bottom, Cell* right, Cell* left) { m_top = top; m_bottom = bottom; m_right = right; m_left = left; }
 	inline void setWater(bool water) { m_water = water; }
+	inline void setRiver(bool river) { m_river = river; }
+	inline void setMount(bool mount) { m_mount = mount; }
 
 	void mutate(float rate);
 	void createEvolution(float rate,int conserve);
 	void store();
 
 	RGBAstr getColor() const;
-
+	bool isMount() const { return m_mount; }
 	bool isWater() const { return m_water; }
+	bool isRiver() const { return m_river; }
 	SynPos getsyntaxPos()const	{ return m_syntaxPos; }
 	float getCsize()const { return m_Csize; }
 	float getVsize()const { return m_Vsize; }

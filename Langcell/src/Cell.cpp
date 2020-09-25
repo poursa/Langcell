@@ -10,7 +10,7 @@
 float maxtot = -2;
 float mintot = 2;
 Cell::Cell()
-	:m_right(nullptr),m_top(nullptr),m_left(nullptr),m_bottom(nullptr),m_water(false)
+	:m_right(nullptr),m_top(nullptr),m_left(nullptr),m_bottom(nullptr),m_water(false), m_river(false), m_mount(false)
 {
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -28,7 +28,7 @@ Cell::Cell()
 }
 
 Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
-	:m_right(nullptr), m_top(nullptr), m_left(nullptr), m_bottom(nullptr), m_water(false)
+	:m_right(nullptr), m_top(nullptr), m_left(nullptr), m_bottom(nullptr), m_water(false), m_river(false), m_mount(false)
 {
 	/*Bound checking*/
 	old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(std::abs(syntaxPos % 6)); 
@@ -110,6 +110,13 @@ void Cell::createEvolution(float rate,int conserve)
 	std::uniform_int_distribution<> conserv(0, 1000);
 
 	this->store();
+
+	if (this->isRiver()) {
+		conserve -= 400;
+	}
+	else if (this->isMount()) {
+		conserve += 400;
+	}
 
 	if (conserv(gen) > conserve) {
 		std::vector<float> thiscell{ static_cast<float>(this->getsyntaxPos()),this->getCsize(),this->getVsize(),this->getGsize(),this->getMtype() };
