@@ -101,7 +101,7 @@ int main(void)
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
-		Texture texture("res/textures/worldmapnew.png");
+		Texture texture("res/textures/europe.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/
@@ -124,8 +124,8 @@ int main(void)
 		float mutation = 0.0f;
 		int conserve = 0;
 		int red = 0, green = 0, blue = 0;
-		int position_x = 0, position_y = 0;
-		float zoomspeed = 1.5f;
+		int cell_norm_position_x = 0, cell_norm_position_y = 0;
+		float zoomspeed = 1.3f;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -142,11 +142,11 @@ int main(void)
 			shader.SetUniform1i("u_Texture", 0);
 
 
-			position_x = g_xpos / (G_WIDTH / texture.GetWidth());
-			position_y = g_ypos / (G_HEIGHT / texture.GetHeight());
-			red = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().red;
-			green = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().green;
-			blue = texture.getCell(g_xpos / (G_WIDTH / texture.GetWidth()), g_ypos / (G_HEIGHT / texture.GetHeight()))->getColor().blue;
+			cell_norm_position_x = g_xpos / (G_WIDTH / texture.GetWidth());
+			cell_norm_position_y = g_ypos / (G_HEIGHT / texture.GetHeight());
+			red = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().red;
+			green = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().green;
+			blue = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().blue;
 
 			{
 				ImGui::SliderInt("Speed", &speed, 0, 1000);
@@ -163,15 +163,17 @@ int main(void)
 			
 			if (g_yscroll != 0) {
 				if (g_yscroll > 0) {
-					/*TODO: Zoom where mouse is pointed at
-					*/
-
-					left = left / zoomspeed, right = right / zoomspeed, top =top / zoomspeed, bottom =bottom / zoomspeed;
+					/*Make sure the new orthographic projection has proper values to a certain accuracy*/
+					
+					left = ((g_xpos * 2) / G_WIDTH - 1) + (left - ((g_xpos * 2) / G_WIDTH - 1)) / zoomspeed;
+					right = ((g_xpos * 2) / G_WIDTH - 1) + (right - ((g_xpos * 2)/G_WIDTH - 1)  ) / zoomspeed;
+					top = (1 - (g_ypos * 2) / G_HEIGHT ) + (top - (1 - (g_ypos * 2) / G_HEIGHT)) / zoomspeed;
+					bottom = (1 - (g_ypos * 2) / G_HEIGHT) + (bottom - (1 - ((g_ypos * 2) / G_HEIGHT)) ) / zoomspeed;
 				}
 				else {
-					left = left * zoomspeed, right = right * zoomspeed, top = top * zoomspeed, bottom = bottom * zoomspeed;
+					left = -1, right = 1, top = 1, bottom = -1;
 				}
-				std::cout << left << "" << right << "" << top << "" << bottom << std::endl;
+				std::cout << left << " " << right << " " << top << " " << bottom << std::endl;
 				proj = glm::ortho(left, right, bottom, top);
 				mvp = proj * view * model;
 				shader.SetUniformMat4f("u_MVP", mvp);
