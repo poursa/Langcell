@@ -13,7 +13,6 @@
 Shader::Shader(const std::string & filepath)
 	:m_RendererID(0)
 {
-
 	ShaderProgramSource source = ParseShader(filepath);
 	m_RendererID = CreateShader(source.VertexSource, source.FragmentSource);
 }
@@ -55,13 +54,13 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
 	GLCall(glShaderSource(id, 1, &src, nullptr);)
 		GLCall(glCompileShader(id);)
 
-		//Error handling
-		int result;
+	//Error handling
+	int result;
 	GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &result);)
 		if (result == GL_FALSE) {
 			int length;
 			GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);)
-				std::unique_ptr<char[]> message(new char[length]);
+			std::unique_ptr<char[]> message(new char[length]);
 			GLCall(glGetShaderInfoLog(id, length, &length, message.get()));
 			std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertext" : "fragment") << " shader!" << std::endl;
 			std::cout << message << std::endl;
@@ -82,8 +81,6 @@ unsigned int Shader::CreateShader(const std::string& vertexShader, const std::st
 
 	GLCall(glDeleteShader(vs));
 	GLCall(glDeleteShader(fs));
-
-
 
 	return program;
 }

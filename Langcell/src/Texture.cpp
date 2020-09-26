@@ -108,8 +108,6 @@ Texture::Texture(const std::string & path)
 
 	GLCall(glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,m_Width,m_Height,0,GL_RGBA,GL_UNSIGNED_BYTE,m_LocalBuffer));
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
-
-	
 }
 
 Texture::~Texture()
@@ -162,9 +160,3 @@ Cell* Texture::getCell(int x, int y)
 	}
 	return cells.at(0).at(0);
 }
-//bool Texture::isDrawable(int pos) {
-//	if (m_LocalBuffer[pos + 3] == 100 || (m_LocalBuffer[pos] == 0 && m_LocalBuffer[pos + 1] == 0 && m_LocalBuffer[pos + 2] == 0 && m_LocalBuffer[pos + 3] == 255)) {
-//		return true;
-//	}
-//	return false;
-//}

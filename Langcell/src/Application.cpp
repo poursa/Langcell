@@ -1,6 +1,7 @@
 #include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <algorithm>
 
 #include "Renderer.h"
 #include "IndexBuffer.h"
@@ -83,8 +84,8 @@ int main(void)
 		VertexArray va;
 		VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 		VertexBufferLayout layout;
-		layout.Push<float>(2);
-		layout.Push<float>(2);
+		layout.Push<float>(2);//Vertex coordinates
+		layout.Push<float>(2);//Texture coordinates
 		va.AddBuffer(vb, layout);
 		IndexBuffer ib(indices, 6);
 
@@ -101,7 +102,7 @@ int main(void)
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
-		Texture texture("res/textures/europe.png");
+		Texture texture("res/textures/worldmapnew.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/
@@ -116,9 +117,9 @@ int main(void)
 		ImGui::CreateContext();
 		ImGui_ImplGlfwGL3_Init(window, true);
 		ImGui::StyleColorsDark();
-		glfwSetMouseButtonCallback(window, mouse_button_callback);
-		glfwSetCursorPosCallback(window, cursor_position_callback);
-		glfwSetScrollCallback(window, scroll_callback);
+		GLCall(glfwSetMouseButtonCallback(window, mouse_button_callback));
+		GLCall(glfwSetCursorPosCallback(window, cursor_position_callback));
+		GLCall(glfwSetScrollCallback(window, scroll_callback));
 
 		int speed = 50;
 		float mutation = 0.0f;
@@ -128,6 +129,7 @@ int main(void)
 		float zoomspeed = 1.3f;
 		float ortho_mouse_pos_x = 0, ortho_mouse_pos_y = 0;
 		float centerx = 0, centery = 0;
+		float new_left, new_right, new_bottom, new_top;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -164,17 +166,23 @@ int main(void)
 			/*Zoom*/
 			if (g_yscroll != 0) {
 				if (g_yscroll > 0) {
-					if (g_scroll_xpos >=0 && g_scroll_xpos <= G_WIDTH && g_scroll_ypos >= 0 && g_scroll_ypos <= G_HEIGHT) {
+					if ((g_scroll_xpos >= 0 && g_scroll_xpos <= G_WIDTH && g_scroll_ypos >= 0 && g_scroll_ypos <= G_HEIGHT)) {
 						ortho_mouse_pos_x = g_scroll_xpos / G_WIDTH;
 						ortho_mouse_pos_y = g_scroll_ypos / G_HEIGHT;
 						ortho_mouse_pos_x = (right - left) * ortho_mouse_pos_x + left;
 						ortho_mouse_pos_y = (top - bottom) * ortho_mouse_pos_y + bottom;
 						centerx = (right - left) / 2;
 						centery = (top - bottom) / 2;
-						left = (ortho_mouse_pos_x)+((left - ortho_mouse_pos_x) / zoomspeed);
-						right = (ortho_mouse_pos_x)+((right - ortho_mouse_pos_x) / zoomspeed);
-						top = (-ortho_mouse_pos_y) + ((top + ortho_mouse_pos_y) / zoomspeed);
-						bottom = (-ortho_mouse_pos_y) + ((bottom + ortho_mouse_pos_y) / zoomspeed);
+						new_left = (ortho_mouse_pos_x)+((left - ortho_mouse_pos_x) / zoomspeed);
+						new_right = (ortho_mouse_pos_x)+((right - ortho_mouse_pos_x) / zoomspeed);
+						new_top = (-ortho_mouse_pos_y) + ((top + ortho_mouse_pos_y) / zoomspeed);
+						new_bottom = (-ortho_mouse_pos_y) + ((bottom + ortho_mouse_pos_y) / zoomspeed);
+						if ((new_left < new_right && new_bottom < new_top)) {
+							left = new_left;
+							right = new_right;
+							bottom = new_bottom;
+							top = new_top;
+						}
 					}
 				}
 				else {
@@ -187,21 +195,21 @@ int main(void)
 				g_yscroll = 0;
 			}
 			/* Swap front and back buffers */
-			glfwSwapBuffers(window);
+			GLCall(glfwSwapBuffers(window));
 
 			/* Poll for and process events */
-			glfwPollEvents();
+			GLCall(glfwPollEvents());
 		}
+		ImGui_ImplGlfwGL3_Shutdown();
+		ImGui::DestroyContext();
 	}
-	ImGui_ImplGlfwGL3_Shutdown();
-	ImGui::DestroyContext();
 	glfwTerminate();
 }
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		double l_xpos, l_ypos;
-		glfwGetCursorPos(window, &l_xpos, &l_ypos);
+		GLCall(glfwGetCursorPos(window, &l_xpos, &l_ypos));
 		g_xpos = (int)l_xpos;
 		g_ypos = (int)l_ypos;
 	}
@@ -212,7 +220,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	double l_xpos, l_ypos;
-	glfwGetCursorPos(window, &l_xpos, &l_ypos);
+	GLCall(glfwGetCursorPos(window, &l_xpos, &l_ypos));
 	g_scroll_xpos = (int)l_xpos;
 	g_scroll_ypos = (int)l_ypos;
 	g_yscroll = yoffset;
