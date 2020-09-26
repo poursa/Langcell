@@ -20,7 +20,7 @@
 #define G_HEIGHT 1000.f
 
 int g_yscroll = 0;
-int g_xpos = 0, g_ypos = 0;
+int g_xpos = 0, g_ypos = 0, g_scroll_xpos = 0, g_scroll_ypos = 0;;
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
@@ -126,6 +126,8 @@ int main(void)
 		int red = 0, green = 0, blue = 0;
 		int cell_norm_position_x = 0, cell_norm_position_y = 0;
 		float zoomspeed = 1.3f;
+		float ortho_mouse_pos_x = 0, ortho_mouse_pos_y = 0;
+		float centerx = 0, centery = 0;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -138,16 +140,16 @@ int main(void)
 			shader.Bind();
 			renderer.Draw(va, ib, shader);
 
-			texture.Refresh(speed,mutation,conserve);
+			texture.Refresh(speed, mutation, conserve);
 			shader.SetUniform1i("u_Texture", 0);
 
-
-			cell_norm_position_x = g_xpos / (G_WIDTH / texture.GetWidth());
-			cell_norm_position_y = g_ypos / (G_HEIGHT / texture.GetHeight());
-			red = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().red;
-			green = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().green;
-			blue = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().blue;
-
+			if (g_xpos >= 0 && g_xpos <= G_WIDTH && g_ypos >= 0 && g_ypos <= G_HEIGHT) {
+				cell_norm_position_x = g_xpos / (G_WIDTH / texture.GetWidth());
+				cell_norm_position_y = g_ypos / (G_HEIGHT / texture.GetHeight());
+				red = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().red;
+				green = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().green;
+				blue = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().blue;
+			}
 			{
 				ImGui::SliderInt("Speed", &speed, 0, 1000);
 				ImGui::SliderInt("Conservation", &conserve, 0, 1000);
@@ -160,15 +162,20 @@ int main(void)
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
 			/*Zoom*/
-			
 			if (g_yscroll != 0) {
 				if (g_yscroll > 0) {
-					/*Make sure the new orthographic projection has proper values to a certain accuracy*/
-					
-					left = ((g_xpos * 2) / G_WIDTH - 1) + (left - ((g_xpos * 2) / G_WIDTH - 1)) / zoomspeed;
-					right = ((g_xpos * 2) / G_WIDTH - 1) + (right - ((g_xpos * 2)/G_WIDTH - 1)  ) / zoomspeed;
-					top = (1 - (g_ypos * 2) / G_HEIGHT ) + (top - (1 - (g_ypos * 2) / G_HEIGHT)) / zoomspeed;
-					bottom = (1 - (g_ypos * 2) / G_HEIGHT) + (bottom - (1 - ((g_ypos * 2) / G_HEIGHT)) ) / zoomspeed;
+					if (g_scroll_xpos >=0 && g_scroll_xpos <= G_WIDTH && g_scroll_ypos >= 0 && g_scroll_ypos <= G_HEIGHT) {
+						ortho_mouse_pos_x = g_scroll_xpos / G_WIDTH;
+						ortho_mouse_pos_y = g_scroll_ypos / G_HEIGHT;
+						ortho_mouse_pos_x = (right - left) * ortho_mouse_pos_x + left;
+						ortho_mouse_pos_y = (top - bottom) * ortho_mouse_pos_y + bottom;
+						centerx = (right - left) / 2;
+						centery = (top - bottom) / 2;
+						left = (ortho_mouse_pos_x)+((left - ortho_mouse_pos_x) / zoomspeed);
+						right = (ortho_mouse_pos_x)+((right - ortho_mouse_pos_x) / zoomspeed);
+						top = (-ortho_mouse_pos_y) + ((top + ortho_mouse_pos_y) / zoomspeed);
+						bottom = (-ortho_mouse_pos_y) + ((bottom + ortho_mouse_pos_y) / zoomspeed);
+					}
 				}
 				else {
 					left = -1, right = 1, top = 1, bottom = -1;
@@ -206,7 +213,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	double l_xpos, l_ypos;
 	glfwGetCursorPos(window, &l_xpos, &l_ypos);
-	g_xpos = (int)l_xpos;
-	g_ypos = (int)l_ypos;
+	g_scroll_xpos = (int)l_xpos;
+	g_scroll_ypos = (int)l_ypos;
 	g_yscroll = yoffset;
 }

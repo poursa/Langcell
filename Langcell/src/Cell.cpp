@@ -115,7 +115,7 @@ void Cell::createEvolution(float rate,int conserve)
 		conserve -= 400;
 	}
 	else if (this->isMount()) {
-		conserve += 400;
+		conserve += 100;
 	}
 
 	if (conserv(gen) > conserve) {
