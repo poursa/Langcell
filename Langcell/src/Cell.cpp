@@ -25,6 +25,8 @@ Cell::Cell()
 		old.m_Vsize = m_Vsize = static_cast<float>(rV(gen));
 		old.m_Mtype = m_Mtype = static_cast<float>(rM(gen));
 		old.m_Gsize = m_Gsize = static_cast<float>(rG(gen));
+
+		this->m_CellV = std::vector<float>{ static_cast<float>(this->getsyntaxPos()), this->getCsize(), this->getVsize(), this->getGsize(), this->getMtype() };
 }
 
 Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
@@ -32,10 +34,11 @@ Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
 {
 	/*Bound checking*/
 	old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(std::abs(syntaxPos % 6)); 
-	old.m_Csize = m_Csize = Csize < 8 ? 8 : (Csize > 100 ? 100 : Csize); 
-	old.m_Vsize = m_Vsize = Vsize < 3 ? 3 : (Vsize > 50 ? 50 : Vsize); 
-	old.m_Mtype = m_Mtype = Mtype > 50 ? 50 : (Mtype < 0 ? 0 : Mtype); 
-	old.m_Gsize = m_Gsize = Gsize > 20 ? 20 : (Gsize < 0 ? 0 : Gsize); 
+	old.m_Csize = m_Csize = Csize < 8 ? 8 : (Csize > 100 ? 100 : Csize);
+	old.m_Vsize = m_Vsize = Vsize < 3 ? 3 : (Vsize > 50 ? 50 : Vsize);
+	old.m_Mtype = m_Mtype = Mtype > 50 ? 50 : (Mtype < 0 ? 0 : Mtype);
+	old.m_Gsize = m_Gsize = Gsize > 20 ? 20 : (Gsize < 0 ? 0 : Gsize);
+	this->m_CellV = std::vector<float>{ static_cast<float>(this->getsyntaxPos()), this->getCsize(), this->getVsize(), this->getGsize(), this->getMtype() };
 }
 
 
@@ -109,24 +112,21 @@ void Cell::createEvolution(float rate,int conserve)
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<> conserv(0, 1000);
 
-	this->store();
-
 	if (this->isRiver()) {
-		conserve -= 400;
+		conserve -= 200;
 	}
 	else if (this->isMount()) {
-		conserve += 100;
+		conserve += 50;
 	}
 
 	if (conserv(gen) > conserve) {
-		std::vector<float> thiscell{ static_cast<float>(this->getsyntaxPos()),this->getCsize(),this->getVsize(),this->getGsize(),this->getMtype() };
 		//The neighbors of a cell make its contents move towards them more if they are correlated
 		float cossimtop = -1;
 		float aggSyn = 0, aggC = 0, aggV = 0, aggM = 0, aggG = 0;
-		auto aggCalcOld = [&aggSyn, &aggC, &aggV, &aggM, &aggG, &thiscell, this](Cell* neighbor) {
+		auto aggCalcOld = [&aggSyn, &aggC, &aggV, &aggM, &aggG, this](Cell* neighbor) {
 			if (neighbor != nullptr) {
-				std::vector<float> top{ static_cast<float>(neighbor->getOsyntaxPos()),neighbor->getOCsize(),neighbor->getOVsize(),neighbor->getOGsize(),neighbor->getOMtype() };
-				float cossim = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), top.begin(), 0.0f) / (vecnorm5d(thiscell) * vecnorm5d(top)));
+				std::vector<float> neighborvec{ static_cast<float>(neighbor->getOsyntaxPos()),neighbor->getOCsize(),neighbor->getOVsize(),neighbor->getOGsize(),neighbor->getOMtype() };
+				float cossim = static_cast<float>(std::inner_product(m_CellV.begin(), m_CellV.end(), neighborvec.begin(), 0.0f) / (vecnorm5d(m_CellV) * vecnorm5d(neighborvec)));
 				if (neighbor->getOsyntaxPos() != m_syntaxPos) {
 					aggSyn += ((m_syntaxPos < neighbor->getOsyntaxPos()) ? +1 : -1) * cossim;
 				}
@@ -144,33 +144,10 @@ void Cell::createEvolution(float rate,int conserve)
 				}
 			}
 		};
-		auto aggCalc = [&aggSyn, &aggC, &aggV, &aggM, &aggG, &thiscell, this](Cell* neighbor) {
-			if (neighbor != nullptr) {
-				std::vector<float> top{ static_cast<float>(neighbor->getsyntaxPos()),neighbor->getCsize(),neighbor->getVsize(),neighbor->getGsize(),neighbor->getMtype() };
-				float cossim = static_cast<float>(std::inner_product(thiscell.begin(), thiscell.end(), top.begin(), 0.0f) / (vecnorm5d(thiscell) * vecnorm5d(top)));
-				if (neighbor->getsyntaxPos() != m_syntaxPos) {
-					aggSyn += ((m_syntaxPos < neighbor->getsyntaxPos()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getCsize() != m_Csize) {
-					aggC += ((m_Csize < neighbor->getCsize()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getVsize() != m_Vsize) {
-					aggV += ((m_Vsize < neighbor->getVsize()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getMtype() != m_Mtype) {
-					aggM += ((m_Mtype < neighbor->getMtype()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getGsize() != m_Gsize) {
-					aggG += ((m_Gsize < neighbor->getGsize()) ? +1 : -1) * cossim;
-				}
-			}
-		};
 		aggCalcOld(this->m_top);
 		aggCalcOld(this->m_left);
-		aggCalc(this->m_right);
-		aggCalc(this->m_bottom);
-
-
+		aggCalcOld(this->m_right);
+		aggCalcOld(this->m_bottom);
 
 		m_syntaxPos = static_cast<SynPos>(std::abs((m_syntaxPos + (int)aggSyn) % 6));
 		m_Csize = m_Csize + aggC;

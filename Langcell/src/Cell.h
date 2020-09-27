@@ -35,7 +35,7 @@ private:
 		SynPos m_syntaxPos;
 		float m_Csize, m_Vsize, m_Mtype, m_Gsize;
 	} old;
-	
+	std::vector<float> m_CellV;
 public:
 	Cell();
 	Cell(SynPos m_syntaxPos, float m_Csize, float m_Vsize, float m_Mtype, float m_Gsize);

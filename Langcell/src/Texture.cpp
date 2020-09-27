@@ -3,6 +3,9 @@
 #include "Cell.h"
 
 #include "stb_image/stb_image.h"
+
+
+
 Texture::Texture(const std::string & path)
 	:m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0), m_update(0)
 {
@@ -139,9 +142,18 @@ void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 	for (int i = 0; i < m_Height; i++) {
 		for (int j = 0; j < m_Width; j++) {
 			if (!cells.at(i).at(j)->isWater()) {
+				m_Futures.push_back(std::async(std::launch::async, &Texture::SaveCell,this,i,j));
+			}
+		}
+	}
+	m_Futures.~vector();
+
+	for (int i = 0; i < m_Height; i++) {
+		for (int j = 0; j < m_Width; j++) {
+			if (!cells.at(i).at(j)->isWater()) {
 				int pos = i * m_Width * 4 + j * 4;
 				if (m_update >= speed) {
-					cells.at(i).at(j)->createEvolution(mutation,conserve);
+					m_Futures.push_back(std::async(std::launch::async, &Texture::UpdateCell, this, i , j, mutation, conserve));
 				}
 				m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
 				m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j)->getColor().green;
@@ -149,10 +161,20 @@ void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 			}
 		}
 	}
-
+	m_Futures.~vector();
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer));
+
 }
+
+void Texture::UpdateCell(int i, int j, float mutation, int conserve) {
+	cells.at(i).at(j)->createEvolution(mutation, conserve);
+}
+
+void Texture::SaveCell(int i, int j) {
+	cells.at(i).at(j)->store();
+}
+
 Cell* Texture::getCell(int x, int y)
 { 
 	if (x <= m_Width && y <= m_Height && x >= 0 && y >= 0) {
@@ -160,3 +182,4 @@ Cell* Texture::getCell(int x, int y)
 	}
 	return cells.at(0).at(0);
 }
+

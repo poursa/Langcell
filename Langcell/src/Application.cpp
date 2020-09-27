@@ -94,7 +94,6 @@ int main(void)
 		glm::mat4 view = glm::translate(glm::mat4(1.0f),glm::vec3(0,0,0));
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 
-
 		glm::mat4 mvp = proj * view * model;
 		
 		Shader shader("res/shaders/Basic.shader");
@@ -173,8 +172,8 @@ int main(void)
 						ortho_mouse_pos_y = (top - bottom) * ortho_mouse_pos_y + bottom;
 						centerx = (right - left) / 2;
 						centery = (top - bottom) / 2;
-						new_left = (ortho_mouse_pos_x)+((left - ortho_mouse_pos_x) / zoomspeed);
-						new_right = (ortho_mouse_pos_x)+((right - ortho_mouse_pos_x) / zoomspeed);
+						new_left = (ortho_mouse_pos_x)+ ((left - ortho_mouse_pos_x) / zoomspeed);
+						new_right = (ortho_mouse_pos_x)+ ((right - ortho_mouse_pos_x) / zoomspeed);
 						new_top = (-ortho_mouse_pos_y) + ((top + ortho_mouse_pos_y) / zoomspeed);
 						new_bottom = (-ortho_mouse_pos_y) + ((bottom + ortho_mouse_pos_y) / zoomspeed);
 						if ((new_left < new_right && new_bottom < new_top)) {
