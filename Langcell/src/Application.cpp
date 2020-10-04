@@ -21,11 +21,14 @@
 #define G_HEIGHT 1000.f
 
 int g_yscroll = 0;
-int g_xpos = 0, g_ypos = 0, g_scroll_xpos = 0, g_scroll_ypos = 0;;
+int g_xpos = 0, g_ypos = 0;
+float x_offset = 0, y_offset = 0;
+bool offset = false;
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 
 int main(void)
@@ -119,6 +122,7 @@ int main(void)
 		GLCall(glfwSetMouseButtonCallback(window, mouse_button_callback));
 		GLCall(glfwSetCursorPosCallback(window, cursor_position_callback));
 		GLCall(glfwSetScrollCallback(window, scroll_callback));
+		GLCall(glfwSetKeyCallback(window, key_callback));
 
 		int speed = 50;
 		float mutation = 0.0f;
@@ -165,33 +169,54 @@ int main(void)
 			/*Zoom*/
 			if (g_yscroll != 0) {
 				if (g_yscroll > 0) {
-					if ((g_scroll_xpos >= 0 && g_scroll_xpos <= G_WIDTH && g_scroll_ypos >= 0 && g_scroll_ypos <= G_HEIGHT)) {
-						ortho_mouse_pos_x = g_scroll_xpos / G_WIDTH;
-						ortho_mouse_pos_y = g_scroll_ypos / G_HEIGHT;
-						ortho_mouse_pos_x = (right - left) * ortho_mouse_pos_x + left;
-						ortho_mouse_pos_y = (top - bottom) * ortho_mouse_pos_y + bottom;
-						centerx = (right - left) / 2;
-						centery = (top - bottom) / 2;
-						new_left = (ortho_mouse_pos_x)+ ((left - ortho_mouse_pos_x) / zoomspeed);
-						new_right = (ortho_mouse_pos_x)+ ((right - ortho_mouse_pos_x) / zoomspeed);
-						new_top = (-ortho_mouse_pos_y) + ((top + ortho_mouse_pos_y) / zoomspeed);
-						new_bottom = (-ortho_mouse_pos_y) + ((bottom + ortho_mouse_pos_y) / zoomspeed);
-						if ((new_left < new_right && new_bottom < new_top)) {
-							left = new_left;
-							right = new_right;
-							bottom = new_bottom;
-							top = new_top;
-						}
-					}
+					new_left = left / zoomspeed;
+					new_right = right / zoomspeed;
+					new_top = top / zoomspeed;
+					new_bottom = bottom / zoomspeed;
 				}
 				else {
-					left = -1, right = 1, top = 1, bottom = -1;
+					new_left = left * zoomspeed;
+					new_right = right * zoomspeed;
+					new_top = top * zoomspeed;
+					new_bottom = bottom * zoomspeed;
+				}
+				if ((new_left + 0.01 < new_right && new_bottom + 0.01 < new_top)
+					&& (new_left >= -1 && new_right <= 1 && new_bottom >= -1 && new_top <= 1)) {
+					left = new_left;
+					right = new_right;
+					bottom = new_bottom;
+					top = new_top;
 				}
 				std::cout << left << " " << right << " " << top << " " << bottom << std::endl;
 				proj = glm::ortho(left, right, bottom, top);
 				mvp = proj * view * model;
 				shader.SetUniformMat4f("u_MVP", mvp);
 				g_yscroll = 0;
+			}
+			else {
+				new_left = left;
+				new_right = right;
+				new_top = top;
+				new_bottom = bottom;
+			}
+			if (offset) {
+				new_left += x_offset;
+				new_right += x_offset;
+				new_top += y_offset;
+				new_bottom += y_offset;
+				if (new_left >= -1 && new_right <= 1 && new_bottom >= -1 && new_top <= 1) {
+					left = new_left;
+					right = new_right;
+					bottom = new_bottom;
+					top = new_top;
+				}
+				std::cout << left << " " << right << " " << top << " " << bottom << std::endl;
+				proj = glm::ortho(left, right, bottom, top);
+				mvp = proj * view * model;
+				shader.SetUniformMat4f("u_MVP", mvp);
+				x_offset = 0;
+				y_offset = 0;
+				offset = false;
 			}
 			/* Swap front and back buffers */
 			GLCall(glfwSwapBuffers(window));
@@ -216,11 +241,26 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
 }
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+		y_offset += 0.1;
+		offset = true;
+	}
+	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+		y_offset += -0.1;
+		offset = true;
+	}
+	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+		x_offset += -0.1;
+		offset = true;
+	}
+	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+		x_offset += 0.1;
+		offset = true;
+	}
+}
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	double l_xpos, l_ypos;
-	GLCall(glfwGetCursorPos(window, &l_xpos, &l_ypos));
-	g_scroll_xpos = (int)l_xpos;
-	g_scroll_ypos = (int)l_ypos;
 	g_yscroll = yoffset;
 }
