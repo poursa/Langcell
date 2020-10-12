@@ -1249,5 +1249,11 @@
     <Image Include="res\textures\worldmapnew.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="res\textures\europe.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\textures\debugmap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
