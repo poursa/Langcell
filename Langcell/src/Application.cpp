@@ -1,6 +1,5 @@
 #include <iostream>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+
 #include <algorithm>
 
 #include "Renderer.h"
@@ -10,6 +9,7 @@
 #include "Shader.h"
 #include "VertexBufferLayout.h"
 #include "Texture.h"
+#include "Callbacks.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -19,17 +19,6 @@
 
 #define G_WIDTH  1000.f
 #define G_HEIGHT 1000.f
-
-int g_yscroll = 0;
-int g_xpos = 0, g_ypos = 0;
-float x_offset = 0, y_offset = 0;
-bool offset = false;
-
-static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-
 
 int main(void)
 {
@@ -104,7 +93,7 @@ int main(void)
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
-		Texture texture("res/textures/europe.png");
+		Texture texture("res/textures/worldmapnew.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/
@@ -119,10 +108,8 @@ int main(void)
 		ImGui::CreateContext();
 		ImGui_ImplGlfwGL3_Init(window, true);
 		ImGui::StyleColorsDark();
-		GLCall(glfwSetMouseButtonCallback(window, mouse_button_callback));
-		GLCall(glfwSetCursorPosCallback(window, cursor_position_callback));
-		GLCall(glfwSetScrollCallback(window, scroll_callback));
-		GLCall(glfwSetKeyCallback(window, key_callback));
+		/*Settings Callbacks*/
+		Callbacks cbs(window);
 
 		int speed = 50;
 		float mutation = 0.0f;
@@ -147,10 +134,10 @@ int main(void)
 
 			texture.Refresh(speed, mutation, conserve);
 			shader.SetUniform1i("u_Texture", 0);
-
-			if (g_xpos >= 0 && g_xpos <= G_WIDTH && g_ypos >= 0 && g_ypos <= G_HEIGHT) {
-				cell_norm_position_x = g_xpos / (G_WIDTH / texture.GetWidth());
-				cell_norm_position_y = g_ypos / (G_HEIGHT / texture.GetHeight());
+			
+			if (cbs.g_xpos >= 0 && cbs.g_xpos <= G_WIDTH && cbs.g_ypos >= 0 && cbs.g_ypos <= G_HEIGHT) {
+				cell_norm_position_x = cbs.g_xpos / (G_WIDTH / texture.GetWidth());
+				cell_norm_position_y = cbs.g_ypos / (G_HEIGHT / texture.GetHeight());
 				red = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().red;
 				green = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().green;
 				blue = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().blue;
@@ -158,17 +145,17 @@ int main(void)
 			{
 				ImGui::SliderInt("Speed", &speed, 0, 1000);
 				ImGui::SliderInt("Conservation", &conserve, 0, 1000);
-				ImGui::SliderFloat("Mutation", &mutation, 0.0f, 10.0f);
+				ImGui::SliderFloat("Mutation", &mutation, 0.0f, 50.0f);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-				ImGui::Text("R: %d G: %d B: %d", red , green, blue);
+				ImGui::Text("R: %d G: %d B: %d x: %d y: %d", red, green, blue, cell_norm_position_x, cell_norm_position_y);
 			}
 
 			ImGui::Render();
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
 			/*Zoom*/
-			if (g_yscroll != 0) {
-				if (g_yscroll > 0) {
+			if (cbs.g_yscroll != 0) {
+				if (cbs.g_yscroll > 0) {
 					new_left = left / zoomspeed;
 					new_right = right / zoomspeed;
 					new_top = top / zoomspeed;
@@ -191,7 +178,7 @@ int main(void)
 				proj = glm::ortho(left, right, bottom, top);
 				mvp = proj * view * model;
 				shader.SetUniformMat4f("u_MVP", mvp);
-				g_yscroll = 0;
+				cbs.g_yscroll = 0;
 			}
 			else {
 				new_left = left;
@@ -199,11 +186,11 @@ int main(void)
 				new_top = top;
 				new_bottom = bottom;
 			}
-			if (offset) {
-				new_left += x_offset;
-				new_right += x_offset;
-				new_top += y_offset;
-				new_bottom += y_offset;
+			if (cbs.offset) {
+				new_left += cbs.x_offset;
+				new_right += cbs.x_offset;
+				new_top += cbs.y_offset;
+				new_bottom += cbs.y_offset;
 				if (new_left >= -1 && new_right <= 1 && new_bottom >= -1 && new_top <= 1) {
 					left = new_left;
 					right = new_right;
@@ -214,9 +201,9 @@ int main(void)
 				proj = glm::ortho(left, right, bottom, top);
 				mvp = proj * view * model;
 				shader.SetUniformMat4f("u_MVP", mvp);
-				x_offset = 0;
-				y_offset = 0;
-				offset = false;
+				cbs.x_offset = 0;
+				cbs.y_offset = 0;
+				cbs.offset = false;
 			}
 			/* Swap front and back buffers */
 			GLCall(glfwSwapBuffers(window));
@@ -229,38 +216,6 @@ int main(void)
 	}
 	glfwTerminate();
 }
+void zoom() {
 
-static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-		double l_xpos, l_ypos;
-		GLCall(glfwGetCursorPos(window, &l_xpos, &l_ypos));
-		g_xpos = (int)l_xpos;
-		g_ypos = (int)l_ypos;
-	}
-}
-static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
-{
-}
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
-		y_offset += 0.1;
-		offset = true;
-	}
-	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
-		y_offset += -0.1;
-		offset = true;
-	}
-	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
-		x_offset += -0.1;
-		offset = true;
-	}
-	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
-		x_offset += 0.1;
-		offset = true;
-	}
-}
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-	g_yscroll = yoffset;
 }

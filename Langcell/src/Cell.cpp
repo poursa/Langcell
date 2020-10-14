@@ -7,18 +7,16 @@
 
 #include "Cell.h"
 
-float maxtot = -2;
-float mintot = 2;
 Cell::Cell()
 	:m_right(nullptr),m_top(nullptr),m_left(nullptr),m_bottom(nullptr),m_water(false), m_river(false), m_mount(false)
 {
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<> rsyn(0, 5);
-		std::uniform_int_distribution<> rC(8, 100);
-		std::uniform_int_distribution<> rV(3, 50);
-		std::uniform_int_distribution<> rM(0, 50);
-		std::uniform_int_distribution<> rG(0, 20);
+		std::uniform_int_distribution<> rC(0, 255);
+		std::uniform_int_distribution<> rV(0, 255);
+		std::uniform_int_distribution<> rM(0, 255);
+		std::uniform_int_distribution<> rG(0, 255);
 
 		old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(rsyn(gen));
 		old.m_Csize = m_Csize = static_cast<float>(rC(gen));
@@ -34,10 +32,10 @@ Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
 {
 	/*Bound checking*/
 	old.m_syntaxPos = m_syntaxPos = static_cast<SynPos>(std::abs(syntaxPos % 6)); 
-	old.m_Csize = m_Csize = Csize < 8 ? 8 : (Csize > 100 ? 100 : Csize);
-	old.m_Vsize = m_Vsize = Vsize < 3 ? 3 : (Vsize > 50 ? 50 : Vsize);
-	old.m_Mtype = m_Mtype = Mtype > 50 ? 50 : (Mtype < 0 ? 0 : Mtype);
-	old.m_Gsize = m_Gsize = Gsize > 20 ? 20 : (Gsize < 0 ? 0 : Gsize);
+	old.m_Csize = m_Csize = Csize < 0 ? 0 : (Csize > 255 ? 255 : Csize);
+	old.m_Vsize = m_Vsize = Vsize < 0 ? 0 : (Vsize > 255 ? 255 : Vsize);
+	old.m_Mtype = m_Mtype = Mtype > 255 ? 255 : (Mtype < 0 ? 0 : Mtype);
+	old.m_Gsize = m_Gsize = Gsize > 255 ? 255: (Gsize < 1 ? 1 : Gsize);
 	this->m_CellV = std::vector<float>{ static_cast<float>(this->getsyntaxPos()), this->getCsize(), this->getVsize(), this->getGsize(), this->getMtype() };
 }
 
@@ -52,9 +50,9 @@ RGBAstr Cell::getColor() const
 	float blue = m_Vsize;
 
 	/*Normalize colors*/
-	red = red / 50 ;
-	green = (green - 8) / (100 - 8);
-	blue  = (blue - 3) / (50 - 3);
+	red = red / 255 ;
+	green = green / 255;
+	blue  = blue  / 255;
 
 	unsigned int red_255 = red * 255.f;
 	unsigned int green_255 = green * 255.f;
@@ -113,7 +111,7 @@ void Cell::createEvolution(float rate,int conserve)
 	std::uniform_int_distribution<> conserv(0, 1000);
 
 	if (this->isRiver()) {
-		conserve -= 200;
+		conserve -= 100;
 	}
 	else if (this->isMount()) {
 		conserve += 50;
@@ -157,10 +155,10 @@ void Cell::createEvolution(float rate,int conserve)
 
 
 		mutate(rate);
-		m_Csize = m_Csize < 8 ? 8 : (m_Csize > 100 ? 100 : m_Csize);
-		m_Vsize = m_Vsize < 3 ? 3 : (m_Vsize > 50 ? 50 : m_Vsize);
-		m_Mtype = m_Mtype > 50 ? 50 : (m_Mtype < 0 ? 0 : m_Mtype);
-		m_Gsize = m_Gsize > 20 ? 20 : (m_Gsize < 0 ? 0 : m_Gsize);
+		m_Csize = m_Csize < 0 ? 0 : (m_Csize > 255 ? 255 : m_Csize);
+		m_Vsize = m_Vsize < 0 ? 0 : (m_Vsize > 255 ? 255 : m_Vsize);
+		m_Mtype = m_Mtype > 255 ? 255 : (m_Mtype < 0 ? 0 : m_Mtype);
+		m_Gsize = m_Gsize > 255 ? 255 : (m_Gsize < 1 ? 1 : m_Gsize);
 	}
 	
 	
