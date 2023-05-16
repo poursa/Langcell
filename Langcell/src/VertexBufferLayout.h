@@ -32,7 +32,7 @@ public:
 	/*`Count` amount of an element is added to the Layout and the stride is increased appropriately*/
 	template<typename T>
 	void Push(unsigned int count) {
-		static_assert(false);
+		assert(false);
 	}
 
 	template<>

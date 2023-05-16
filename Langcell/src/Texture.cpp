@@ -142,18 +142,20 @@ void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 	for (int i = 0; i < m_Height; i++) {
 		for (int j = 0; j < m_Width; j++) {
 			if (!cells.at(i).at(j)->isWater()) {
-				m_Futures.push_back(std::async(std::launch::async, &Texture::SaveCell,this,i,j));
+				//m_Futures.push_back(std::async(std::launch::async, &Texture::SaveCell,this,i,j));
+				SaveCell(i, j);
 			}
 		}
 	}
-	m_Futures.~vector();
+	//m_Futures.~vector();
 
 	for (int i = 0; i < m_Height; i++) {
 		for (int j = 0; j < m_Width; j++) {
 			if (!cells.at(i).at(j)->isWater()) {
 				int pos = i * m_Width * 4 + j * 4;
 				if (m_update >= speed) {
-					m_Futures.push_back(std::async(std::launch::async, &Texture::UpdateCell, this, i , j, mutation, conserve));
+					UpdateCell(i, j, mutation, conserve);
+				//	m_Futures.push_back(std::async(std::launch::async, &Texture::UpdateCell, this, i , j, mutation, conserve));
 				}
 				m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j)->getColor().red;
 				m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j)->getColor().green;
@@ -161,7 +163,8 @@ void Texture::Refresh(unsigned int speed,float mutation, int conserve)
 			}
 		}
 	}
-	m_Futures.~vector();
+	//m_Futures.~vector();
+		
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer));
 
