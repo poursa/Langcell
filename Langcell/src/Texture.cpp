@@ -7,6 +7,7 @@
 
 
 
+
 Texture::Texture(const std::string & path)
 	:m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0), m_update(0)
 {
@@ -173,17 +174,16 @@ void Texture::Refresh(unsigned int speed, float mutation, int conserve)
 			}
 		}
 	};
-	std::thread thread1(upcells, 0               , m_Height * 1 / 6);
-	std::thread thread2(upcells, m_Height * 1 / 6, m_Height * 2 / 6);
-	std::thread thread3(upcells, m_Height * 2 / 6, m_Height * 3 / 6);
-	std::thread thread4(upcells, m_Height * 3 / 6, m_Height * 4 / 6);
-	std::thread thread5(upcells, m_Height * 4 / 6, m_Height * 5 / 6);
-	upcells(                     m_Height * 5 / 6, m_Height);
-	thread1.join();
-	thread2.join();
-	thread3.join();
-	thread4.join();
-	thread5.join();
+
+	std::vector<std::thread> threads;
+	for (int split = 0; split < TEX_THREADS; split++) {
+		threads.emplace_back(upcells, m_Height * split / TEX_THREADS, m_Height * (split + 1) / TEX_THREADS);
+	}
+
+	for (auto &thr : threads) {
+		if(thr.joinable()) thr.join();
+	}
+
 
 	
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));

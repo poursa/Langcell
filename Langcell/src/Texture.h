@@ -4,6 +4,7 @@
 
 #include "Renderer.h"
 #include "Cell.h"
+#define TEX_THREADS 8
 
 class Texture {
 private:
