@@ -11,7 +11,7 @@ private:
 	std::string m_FilePath;
 	unsigned char* m_LocalBuffer;
 	int m_Width, m_Height, m_BPP;
-	std::vector<std::vector<Cell*>> cells;
+	std::vector<std::vector<Cell>> cells;
 	unsigned int m_update;
 	std::vector<std::future<void>> m_Futures;
 public:

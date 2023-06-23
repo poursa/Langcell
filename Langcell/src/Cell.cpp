@@ -54,9 +54,9 @@ RGBAstr Cell::getColor() const
 	green = green / 255;
 	blue  = blue  / 255;
 
-	unsigned int red_255 = red * 255.f;
-	unsigned int green_255 = green * 255.f;
-	unsigned int blue_255 = blue * 255.f;
+	unsigned int red_255 = (unsigned int)(red * 255);
+	unsigned int green_255 = (unsigned int)(green * 255);
+	unsigned int blue_255 = (unsigned int)(blue * 255);
 
 	RGBAstr colorrgb = { red_255, green_255, blue_255, 255 };
 	return colorrgb;
@@ -123,8 +123,12 @@ void Cell::createEvolution(float rate,int conserve)
 		float aggSyn = 0, aggC = 0, aggV = 0, aggM = 0, aggG = 0;
 		auto aggCalcOld = [&aggSyn, &aggC, &aggV, &aggM, &aggG, this](Cell* neighbor) {
 			if (neighbor != nullptr) {
+
 				std::vector<float> neighborvec{ static_cast<float>(neighbor->getOsyntaxPos()),neighbor->getOCsize(),neighbor->getOVsize(),neighbor->getOGsize(),neighbor->getOMtype() };
+
+				//A*B / ||A||*||B||
 				float cossim = static_cast<float>(std::inner_product(m_CellV.begin(), m_CellV.end(), neighborvec.begin(), 0.0f) / (vecnorm5d(m_CellV) * vecnorm5d(neighborvec)));
+
 				if (neighbor->getOsyntaxPos() != m_syntaxPos) {
 					aggSyn += ((m_syntaxPos < neighbor->getOsyntaxPos()) ? +1 : -1) * cossim;
 				}
@@ -142,6 +146,7 @@ void Cell::createEvolution(float rate,int conserve)
 				}
 			}
 		};
+
 		aggCalcOld(this->m_top);
 		aggCalcOld(this->m_left);
 		aggCalcOld(this->m_right);
@@ -160,8 +165,6 @@ void Cell::createEvolution(float rate,int conserve)
 		m_Mtype = m_Mtype > 255 ? 255 : (m_Mtype < 0 ? 0 : m_Mtype);
 		m_Gsize = m_Gsize > 255 ? 255 : (m_Gsize < 1 ? 1 : m_Gsize);
 	}
-	
-	
 }
 void Cell::store() {
 	old.m_Csize = m_Csize;

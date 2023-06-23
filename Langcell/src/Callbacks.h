@@ -13,7 +13,7 @@ public:
 	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-	static int g_yscroll;
+	static double g_yscroll;
 	static int g_xpos, g_ypos;
 	static float x_offset, y_offset;
 	static bool offset;

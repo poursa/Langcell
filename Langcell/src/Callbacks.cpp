@@ -4,7 +4,7 @@
 
 
 
-int Callbacks::g_yscroll;
+double Callbacks::g_yscroll;
 int Callbacks::g_xpos, Callbacks::g_ypos;
 float Callbacks::x_offset, Callbacks::y_offset;
 bool Callbacks::offset;

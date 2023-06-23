@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <algorithm>
+#include <thread>
 
 #include "Renderer.h"
 #include "IndexBuffer.h"
@@ -17,8 +18,8 @@
 #include "imgui/imgui.h"
 #include "imgui//imgui_impl_glfw_gl3.h"
 
-#define G_WIDTH  1000.f
-#define G_HEIGHT 1000.f
+#define G_WIDTH  1000
+#define G_HEIGHT 1000
 
 int main(void)
 {
@@ -83,7 +84,7 @@ int main(void)
 
 		float left = -1.0f, right = 1.0f, top = 1.0f, bottom = -1.0f;
 		glm::mat4 proj = glm::ortho(left, right, bottom, top, -1.0f,1.0f);
-		glm::mat4 view = glm::translate(glm::mat4(1.0f),glm::vec3(0,0,0));
+		glm::mat4 view = glm::translate(glm::mat4(1.0f),glm::vec3(0, 0, 0));
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 
 		glm::mat4 mvp = proj * view * model;
@@ -153,8 +154,10 @@ int main(void)
 			ImGui::Render();
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
+
 			/*Zoom*/
 			if (cbs.g_yscroll != 0) {
+
 				if (cbs.g_yscroll > 0) {
 					new_left = left / zoomspeed;
 					new_right = right / zoomspeed;
@@ -174,18 +177,26 @@ int main(void)
 					bottom = new_bottom;
 					top = new_top;
 				}
+				//zoom out immediately if you're at the edge of the screen
+				else if (new_left >= -1 || new_right <= 1 || new_bottom >= -1 || new_top <= 1) {
+					left = -1.0f;
+					right = 1.0f;
+					top = 1.0f;
+					bottom = -1.0f;
+				}
+				
 				std::cout << left << " " << right << " " << top << " " << bottom << std::endl;
 				proj = glm::ortho(left, right, bottom, top);
 				mvp = proj * view * model;
 				shader.SetUniformMat4f("u_MVP", mvp);
 				cbs.g_yscroll = 0;
 			}
-			else {
-				new_left = left;
-				new_right = right;
-				new_top = top;
-				new_bottom = bottom;
-			}
+			//else {
+			//	new_left = left;
+			//	new_right = right;
+			//	new_top = top;
+			//	new_bottom = bottom;
+			//}
 			if (cbs.offset) {
 				new_left += cbs.x_offset;
 				new_right += cbs.x_offset;
