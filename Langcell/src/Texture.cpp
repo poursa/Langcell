@@ -17,6 +17,7 @@ Texture::Texture(const std::string & path)
 
 	std::cout << m_Height << m_Width << std::endl;
 
+	constexpr bool colored = true;
 	cells.reserve(m_Height);
 
 	for (size_t i = 0; i < m_Height; i++) {
@@ -28,24 +29,24 @@ Texture::Texture(const std::string & path)
 			row.emplace_back();
 			Cell& cell = row.back();
 			if (m_LocalBuffer[pos] == 0 && m_LocalBuffer[pos + 1] == 0 && m_LocalBuffer[pos + 2] == 0 && m_LocalBuffer[pos + 3] == 255) {
-				m_LocalBuffer[pos] = (unsigned char)cell.getColor().red;
-				m_LocalBuffer[pos + 1] = (unsigned char)cell.getColor().green;
-				m_LocalBuffer[pos + 2] = (unsigned char)cell.getColor().blue;
+				m_LocalBuffer[pos] = (unsigned char)cell.getColor(colored).red;
+				m_LocalBuffer[pos + 1] = (unsigned char)cell.getColor(colored).green;
+				m_LocalBuffer[pos + 2] = (unsigned char)cell.getColor(colored).blue;
 			}
 			else if(m_LocalBuffer[pos] == 1 && m_LocalBuffer[pos + 1] == 38 && m_LocalBuffer[pos + 2] == 255 && m_LocalBuffer[pos + 3] == 255){
 				cell.setWater(true);
 			}
 			else if (m_LocalBuffer[pos + 3] == 100) {
-				m_LocalBuffer[pos] = (unsigned char)cell.getColor().red;
-				m_LocalBuffer[pos + 1] = (unsigned char)cell.getColor().green;
-				m_LocalBuffer[pos + 2] = (unsigned char)cell.getColor().blue;
+				m_LocalBuffer[pos] = (unsigned char)cell.getColor(colored).red;
+				m_LocalBuffer[pos + 1] = (unsigned char)cell.getColor(colored).green;
+				m_LocalBuffer[pos + 2] = (unsigned char)cell.getColor(colored).blue;
 				m_LocalBuffer[pos + 3] = 255;
 				cell.setRiver(true);
 			}
 			else if(m_LocalBuffer[pos] == 150 && m_LocalBuffer[pos + 1] == 80 && m_LocalBuffer[pos + 2] == 0 && m_LocalBuffer[pos + 3] == 255) {
-				m_LocalBuffer[pos] = (unsigned char)cell.getColor().red;
-				m_LocalBuffer[pos + 1] = (unsigned char)cell.getColor().green;
-				m_LocalBuffer[pos + 2] = (unsigned char)cell.getColor().blue;
+				m_LocalBuffer[pos] = (unsigned char)cell.getColor(colored).red;
+				m_LocalBuffer[pos + 1] = (unsigned char)cell.getColor(colored).green;
+				m_LocalBuffer[pos + 2] = (unsigned char)cell.getColor(colored).blue;
 				m_LocalBuffer[pos + 3] = 255;
 				cell.setMount(true);
 			}
@@ -138,7 +139,7 @@ void Texture::Unbind() const
 	GLCall(glBindTexture(GL_TEXTURE_2D,0));
 }
 
-void Texture::Refresh(unsigned int speed, float mutation, int conserve)
+void Texture::Refresh(unsigned int speed, float mutation, int conserve_mut ,int conserve_inf, bool colored)
 {
 	/*Affect Cells*/
 	/*Refresh*/
@@ -158,17 +159,17 @@ void Texture::Refresh(unsigned int speed, float mutation, int conserve)
 	}
 
 	
-	auto upcells = [this, speed, mutation, conserve](int hbegin, int hend) {
+	auto upcells = [this, speed, mutation, conserve_mut, conserve_inf, colored](int hbegin, int hend) {
 		for (int i = hbegin; i < hend; i++) {
 			for (int j = 0; j < m_Width; j++) {
 				if (!cells.at(i).at(j).isWater()) {
 					int pos = i * m_Width * 4 + j * 4;
 					if (m_update >= speed) {
-						Texture::UpdateCell(i, j, mutation, conserve);
+						Texture::UpdateCell(i, j, mutation, conserve_mut, conserve_inf);
 
-						m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j).getColor().red;
-						m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j).getColor().green;
-						m_LocalBuffer[pos + 2] = (unsigned char)cells.at(i).at(j).getColor().blue;
+						m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j).getColor(colored).red;
+						m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j).getColor(colored).green;
+						m_LocalBuffer[pos + 2] = (unsigned char)cells.at(i).at(j).getColor(colored).blue;
 					}
 				}
 			}
@@ -191,8 +192,8 @@ void Texture::Refresh(unsigned int speed, float mutation, int conserve)
 
 }
 
-void Texture::UpdateCell(int i, int j, float mutation, int conserve) {
-	cells.at(i).at(j).createEvolution(mutation, conserve);
+void Texture::UpdateCell(int i, int j, float mutation, int conserve_mut, int conserve_inf) {
+	cells.at(i).at(j).createEvolution(mutation, conserve_mut, conserve_inf);
 }
 
 void Texture::SaveCell(int i, int j) {

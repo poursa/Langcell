@@ -94,7 +94,7 @@ int main(void)
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
-		Texture texture("res/textures/worldmap.png");
+		Texture texture("res/textures/worldmapnew.png");
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/
@@ -114,13 +114,14 @@ int main(void)
 
 		int speed = 50;
 		float mutation = 0.0f;
-		int conserve = 0;
+		int conserve_mut = 0, conserve_infl = 0;
 		int red = 0, green = 0, blue = 0;
 		int cell_norm_position_x = 0, cell_norm_position_y = 0;
 		float zoomspeed = 1.3f;
 		float ortho_mouse_pos_x = 0, ortho_mouse_pos_y = 0;
 		float centerx = 0, centery = 0;
 		float new_left, new_right, new_bottom, new_top;
+		bool colored = true;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -133,22 +134,24 @@ int main(void)
 			shader.Bind();
 			renderer.Draw(va, ib, shader);
 
-			texture.Refresh(speed, mutation, conserve);
+			texture.Refresh(speed, mutation, conserve_mut, conserve_infl, colored);
 			shader.SetUniform1i("u_Texture", 0);
 			
 			if (cbs.g_xpos >= 0 && cbs.g_xpos <= G_WIDTH && cbs.g_ypos >= 0 && cbs.g_ypos <= G_HEIGHT) {
 				cell_norm_position_x = cbs.g_xpos / (G_WIDTH / texture.GetWidth());
 				cell_norm_position_y = cbs.g_ypos / (G_HEIGHT / texture.GetHeight());
-				red = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().red;
-				green = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().green;
-				blue = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor().blue;
+				red = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor(true).red;
+				green = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor(true).green;
+				blue = texture.getCell(cell_norm_position_x, cell_norm_position_y)->getColor(true).blue;
 			}
 			{
 				ImGui::SliderInt("Speed", &speed, 0, 1000);
-				ImGui::SliderInt("Conservation", &conserve, 0, 1000);
+				ImGui::SliderInt("Mutation conservation", &conserve_mut, 0, 1000);
+				ImGui::SliderInt("Influence conservation", &conserve_infl, 0, 1000);
 				ImGui::SliderFloat("Mutation", &mutation, 0.0f, 50.0f);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("R: %d G: %d B: %d x: %d y: %d", red, green, blue, cell_norm_position_x, cell_norm_position_y);
+				colored ^= ImGui::SmallButton("Color");
 			}
 
 			ImGui::Render();

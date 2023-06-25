@@ -22,8 +22,11 @@ public:
 	void Bind(unsigned int slot = 0) const;
 	void Unbind() const;
 
-	void UpdateCell(int i, int j, float mutation, int conserve);
-	void Refresh(unsigned int speed, float mutation, int conserve);
+	void Refresh(unsigned int speed, float mutation, int conserve_mut, int conserve_inf, bool colored);
+
+	void UpdateCell(int i, int j, float mutation, int conserve_mut, int conserve_inf);
+
+
 	void SaveCell(int i, int j);
 
 	Cell* getCell(int x, int y);

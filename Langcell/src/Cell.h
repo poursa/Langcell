@@ -4,22 +4,34 @@
 *
 * A cell has the following characteristics
 * Attributes:
-* -Syntax positions(SOV,SVO,...)(less yellow- more yellow)
-* -Consonant inventory size (8...100) (lighter-darker)
-* -Vowel inventory size (3..50) (less blue...more blue)
-* -Isolating,Agglutinative,fusional,polysynthetic(0...50)(less green more green)
-* -Gender(0....20)(less red more red)
-*
-* 
-*
+* -Syntax positions(SOV,SVO,...)
+* -Consonant inventory size (8...100) 
+* -Vowel inventory size (3..50)
+* -Isolating,Agglutinative,fusional,polysynthetic(0...50)
+* -Gender(0....20)
 *
 **/
 
 
 
+
 enum SynPos {
-	SOV, SVO, VOS, VSO, OSV, OVS
+	SOV, SVO, VOS, VSO, OSV, OVS, SYNPOS_MAX = OVS
 };
+
+#define CELL_SYN_MAX SYNPOS_MAX
+#define CELL_C_MAX 255
+#define CELL_V_MAX 255
+#define CELL_M_MAX 255
+#define CELL_G_MAX 255
+
+#define CELL_SYN_MIN 0
+#define CELL_C_MIN 0
+#define CELL_V_MIN 0
+#define CELL_M_MIN 0
+#define CELL_G_MIN 1
+
+
 struct RGBAstr {
 	unsigned int red, green, blue, alpha;
 };
@@ -49,18 +61,21 @@ public:
 	inline void setMount(bool mount) { m_mount = mount; }
 
 	void mutate(float rate);
-	void createEvolution(float rate,int conserve);
+	void createEvolution(float rate,int conserve_mut, int conserve_inf);
 	void store();
+	void cellAttrBind();
 
-	RGBAstr getColor() const;
+	RGBAstr getColor(bool colored) const;
 	bool isMount() const { return m_mount; }
 	bool isWater() const { return m_water; }
 	bool isRiver() const { return m_river; }
+
 	SynPos getsyntaxPos()const	{ return m_syntaxPos; }
 	float getCsize()const { return m_Csize; }
 	float getVsize()const { return m_Vsize; }
 	float getMtype()const { return m_Mtype; }
 	float getGsize()const { return m_Gsize; }
+
 	SynPos getOsyntaxPos()const { return old.m_syntaxPos; }
 	float getOCsize()const { return old.m_Csize; }
 	float getOVsize()const { return old.m_Vsize; }
