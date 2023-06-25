@@ -139,7 +139,7 @@ void Texture::Unbind() const
 	GLCall(glBindTexture(GL_TEXTURE_2D,0));
 }
 
-void Texture::Refresh(unsigned int speed, float mutation, int conserve_mut ,int conserve_inf, bool colored)
+void Texture::Refresh(unsigned int speed, float mutation_rate, float influence_rate, float conserve_mut , float conserve_inf, bool colored)
 {
 	/*Affect Cells*/
 	/*Refresh*/
@@ -159,13 +159,13 @@ void Texture::Refresh(unsigned int speed, float mutation, int conserve_mut ,int 
 	}
 
 	
-	auto upcells = [this, speed, mutation, conserve_mut, conserve_inf, colored](int hbegin, int hend) {
+	auto upcells = [this, speed, mutation_rate, influence_rate, conserve_mut, conserve_inf, colored](int hbegin, int hend) {
 		for (int i = hbegin; i < hend; i++) {
 			for (int j = 0; j < m_Width; j++) {
 				if (!cells.at(i).at(j).isWater()) {
 					int pos = i * m_Width * 4 + j * 4;
 					if (m_update >= speed) {
-						Texture::UpdateCell(i, j, mutation, conserve_mut, conserve_inf);
+						Texture::UpdateCell(i, j, mutation_rate, influence_rate, conserve_mut, conserve_inf);
 
 						m_LocalBuffer[pos] = (unsigned char)cells.at(i).at(j).getColor(colored).red;
 						m_LocalBuffer[pos + 1] = (unsigned char)cells.at(i).at(j).getColor(colored).green;
@@ -192,8 +192,8 @@ void Texture::Refresh(unsigned int speed, float mutation, int conserve_mut ,int 
 
 }
 
-void Texture::UpdateCell(int i, int j, float mutation, int conserve_mut, int conserve_inf) {
-	cells.at(i).at(j).createEvolution(mutation, conserve_mut, conserve_inf);
+void Texture::UpdateCell(int i, int j, float mutation_rate, float influence_rate, float conserve_mut, float conserve_inf) {
+	cells.at(i).at(j).createEvolution(mutation_rate, influence_rate, conserve_mut, conserve_inf);
 }
 
 void Texture::SaveCell(int i, int j) {

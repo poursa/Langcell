@@ -4,7 +4,8 @@
 
 #include "Renderer.h"
 #include "Cell.h"
-#define TEX_THREADS 8
+
+inline constexpr int TEX_THREADS = 10;
 
 class Texture {
 private:
@@ -22,9 +23,9 @@ public:
 	void Bind(unsigned int slot = 0) const;
 	void Unbind() const;
 
-	void Refresh(unsigned int speed, float mutation, int conserve_mut, int conserve_inf, bool colored);
+	void Refresh(unsigned int speed, float mutation_rate, float influence_rate, float conserve_mut, float conserve_inf, bool colored);
 
-	void UpdateCell(int i, int j, float mutation, int conserve_mut, int conserve_inf);
+	void UpdateCell(int i, int j, float mutation_rate, float influence_rate, float conserve_mut, float conserve_inf);
 
 
 	void SaveCell(int i, int j);

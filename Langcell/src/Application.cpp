@@ -112,16 +112,22 @@ int main(void)
 		/*Settings Callbacks*/
 		Callbacks cbs(window);
 
+		//Sliders and buttons
 		int speed = 50;
-		float mutation = 0.0f;
-		int conserve_mut = 0, conserve_infl = 0;
+		float mutation_rate = 0.0f, influence_rate = 0.0f;
+		float conserve_mut = 0, conserve_infl = 0;
+		bool colored = true;
+
+		//Text output
 		int red = 0, green = 0, blue = 0;
+
+		//Zooming and panning 
 		int cell_norm_position_x = 0, cell_norm_position_y = 0;
 		float zoomspeed = 1.3f;
 		float ortho_mouse_pos_x = 0, ortho_mouse_pos_y = 0;
 		float centerx = 0, centery = 0;
 		float new_left, new_right, new_bottom, new_top;
-		bool colored = true;
+		
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
@@ -134,7 +140,7 @@ int main(void)
 			shader.Bind();
 			renderer.Draw(va, ib, shader);
 
-			texture.Refresh(speed, mutation, conserve_mut, conserve_infl, colored);
+			texture.Refresh(speed, mutation_rate, influence_rate, conserve_mut / 100.0f, conserve_infl / 100.0f, colored);
 			shader.SetUniform1i("u_Texture", 0);
 			
 			if (cbs.g_xpos >= 0 && cbs.g_xpos <= G_WIDTH && cbs.g_ypos >= 0 && cbs.g_ypos <= G_HEIGHT) {
@@ -146,9 +152,10 @@ int main(void)
 			}
 			{
 				ImGui::SliderInt("Speed", &speed, 0, 1000);
-				ImGui::SliderInt("Mutation conservation", &conserve_mut, 0, 1000);
-				ImGui::SliderInt("Influence conservation", &conserve_infl, 0, 1000);
-				ImGui::SliderFloat("Mutation", &mutation, 0.0f, 50.0f);
+				ImGui::SliderFloat("Mutation conservation", &conserve_mut, 0, 100, "%.2f %%");
+				ImGui::SliderFloat("Influence conservation", &conserve_infl, 0, 100, "%.2f %%");
+				ImGui::SliderFloat("Mutation", &mutation_rate, 0.0f, 50.0f);
+				ImGui::SliderFloat("Influence", &influence_rate, 0.0f, 10.0f);
 				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 				ImGui::Text("R: %d G: %d B: %d x: %d y: %d", red, green, blue, cell_norm_position_x, cell_norm_position_y);
 				colored ^= ImGui::SmallButton("Color");

@@ -27,7 +27,7 @@ Cell::Cell()
 		this->m_CellV = std::vector<float>{ static_cast<float>(this->getsyntaxPos()), this->getCsize(), this->getVsize(), this->getGsize(), this->getMtype() };
 }
 
-Cell::Cell(SynPos syntaxPos, float Csize, float Vsize, float Mtype, float Gsize)
+Cell::Cell(const SynPos syntaxPos, const float Csize, const float Vsize, const float Mtype, const float Gsize)
 	:m_right(nullptr), m_top(nullptr), m_left(nullptr), m_bottom(nullptr), m_water(false), m_river(false), m_mount(false)
 {
 	/*Bound checking*/
@@ -88,7 +88,7 @@ RGBAstr Cell::getColor(bool colored) const
 	return colorrgb;
 }
 
-void Cell::mutate(float rate)
+void Cell::mutate(const float rate)
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
@@ -130,49 +130,34 @@ void Cell::mutate(float rate)
 	}
 }
 
-void Cell::createEvolution(float rate, int conserve_mut, int conserve_inf)
+void Cell::createEvolution(const float mutation_rate, const float influence_rate,const float conserve_mut, float conserve_inf)
 {
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> conserv_inf(0, 1000);
-	std::uniform_int_distribution<> conserv_mut(0, 1000);
+	std::uniform_real_distribution<> conserv_inf(0, 1);
+	std::uniform_real_distribution<> conserv_mut(0, 1);
 	bool mutated = false, influenced = false;
 
-	if (this->isRiver()) {
-		conserve_inf -= 100;
-	}
-	else if (this->isMount()) {
-		conserve_inf += 50;
-	}
+	if (this->isRiver()) conserve_inf -= 0.1f;
+	else if (this->isMount()) conserve_inf += 0.1f;
 
 	if (conserv_inf(gen) > conserve_inf) {
 		influenced = true;
 		//The neighbors of a cell make its contents move towards them more if they are correlated
-		float cossimtop = -1;
 		float aggSyn = 0, aggC = 0, aggV = 0, aggM = 0, aggG = 0;
-		auto aggCalcOld = [&aggSyn, &aggC, &aggV, &aggM, &aggG, this](Cell* neighbor) {
+		auto aggCalcOld = [this, &aggSyn, &aggC, &aggV, &aggM, &aggG, &influence_rate](const Cell* neighbor) {
 			if (neighbor != nullptr) {
-
-				std::vector<float> neighborvec{ static_cast<float>(neighbor->getOsyntaxPos()),neighbor->getOCsize(),neighbor->getOVsize(),neighbor->getOGsize(),neighbor->getOMtype() };
+				const std::vector<float> neighborvec{ static_cast<float>(neighbor->getOsyntaxPos()) ,neighbor->getOCsize(),neighbor->getOVsize(),neighbor->getOGsize(),neighbor->getOMtype() };
 
 				//Cosine sim A*B / ||A||*||B|| 
-				float cossim = static_cast<float>(std::transform_reduce(m_CellV.begin(), m_CellV.end(), neighborvec.begin(), 0.01f) / (vecnorm5d(m_CellV) * vecnorm5d(neighborvec)));
+				const float cossim = static_cast<float>(std::transform_reduce(m_CellV.begin(), m_CellV.end(), neighborvec.begin(), 0.01f) / (vecnorm5d(m_CellV) * vecnorm5d(neighborvec)));
+				const float cos_rate = cossim * influence_rate;
 
-				if (neighbor->getOsyntaxPos() != m_syntaxPos) {
-					aggSyn += ((m_syntaxPos < neighbor->getOsyntaxPos()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getOCsize() != m_Csize) {
-					aggC += ((m_Csize < neighbor->getOCsize()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getOVsize() != m_Vsize) {
-					aggV += ((m_Vsize < neighbor->getOVsize()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getOMtype() != m_Mtype) {
-					aggM += ((m_Mtype < neighbor->getOMtype()) ? +1 : -1) * cossim;
-				}
-				if (neighbor->getOGsize() != m_Gsize) {
-					aggG += ((m_Gsize < neighbor->getOGsize()) ? +1 : -1) * cossim;
-				}
+				aggSyn += (neighbor->getOsyntaxPos() - m_syntaxPos) * cos_rate;
+				aggC += (neighbor->getOCsize() - m_Csize) * cos_rate;
+				aggV += (neighbor->getOVsize() - m_Vsize) * cos_rate;
+				aggM += (neighbor->getOMtype() - m_Mtype) * cos_rate;
+				aggG += (neighbor->getOGsize() - m_Gsize) * cos_rate;
 			}
 		};
 
@@ -188,13 +173,16 @@ void Cell::createEvolution(float rate, int conserve_mut, int conserve_inf)
 		m_Gsize = m_Gsize + aggG;
 
 	}
+
 	if (conserv_mut(gen) > conserve_mut) {
 		mutated = true;
-		mutate(rate);
+		mutate(mutation_rate);
 	}
+
 	if (influenced || mutated) {
 		cellAttrBind();
 	}
+
 }
 void Cell::store() {
 	old.m_Csize = m_Csize;

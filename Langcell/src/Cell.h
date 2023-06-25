@@ -50,7 +50,7 @@ private:
 	std::vector<float> m_CellV;
 public:
 	Cell();
-	Cell(SynPos m_syntaxPos, float m_Csize, float m_Vsize, float m_Mtype, float m_Gsize);
+	Cell(const SynPos m_syntaxPos, const float m_Csize, const float m_Vsize, const float m_Mtype, const float m_Gsize);
 	~Cell();
 
 	inline float vecnorm5d(std::vector<float> a) { return std::sqrtf(a[0]* a[0] + a[1]* a[1] + a[2]* a[2] + a[3]* a[3] + a[4]*a[4]); }
@@ -61,7 +61,7 @@ public:
 	inline void setMount(bool mount) { m_mount = mount; }
 
 	void mutate(float rate);
-	void createEvolution(float rate,int conserve_mut, int conserve_inf);
+	void createEvolution(const float mutation_rate, const float influence_rate, const float conserve_mut, float conserve_inf);
 	void store();
 	void cellAttrBind();
 
