@@ -7,7 +7,6 @@
 
 
 
-
 Texture::Texture(const std::string & path)
 	:m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0), m_update(0)
 {
@@ -17,7 +16,7 @@ Texture::Texture(const std::string & path)
 
 	std::cout << m_Height << m_Width << std::endl;
 
-	constexpr bool colored = true;
+	constexpr unsigned int colored = 0;
 	cells.reserve(m_Height);
 
 	for (size_t i = 0; i < m_Height; i++) {
@@ -110,6 +109,10 @@ Texture::Texture(const std::string & path)
 			}
 		}
 	}
+
+
+
+
 	GLCall(glGenTextures(1,&m_RendererID));
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 
@@ -139,7 +142,7 @@ void Texture::Unbind() const
 	GLCall(glBindTexture(GL_TEXTURE_2D,0));
 }
 
-void Texture::Refresh(unsigned int speed, float mutation_rate, float influence_rate, float conserve_mut , float conserve_inf, bool colored)
+void Texture::Refresh(unsigned int speed, float mutation_rate, float influence_rate, float conserve_mut , float conserve_inf, unsigned int colored)
 {
 	/*Affect Cells*/
 	/*Refresh*/
@@ -176,6 +179,7 @@ void Texture::Refresh(unsigned int speed, float mutation_rate, float influence_r
 		}
 	};
 
+	//TODO: Reuse threads
 	std::vector<std::thread> threads;
 	for (int split = 0; split < TEX_THREADS; split++) {
 		threads.emplace_back(upcells, m_Height * split / TEX_THREADS, m_Height * (split + 1) / TEX_THREADS);

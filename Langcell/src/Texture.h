@@ -15,7 +15,10 @@ private:
 	int m_Width, m_Height, m_BPP;
 	std::vector<std::vector<Cell>> cells;
 	unsigned int m_update;
-	std::vector<std::future<void>> m_Futures;
+
+
+
+
 public:
 	Texture(const std::string& path);
 	~Texture();
@@ -23,7 +26,7 @@ public:
 	void Bind(unsigned int slot = 0) const;
 	void Unbind() const;
 
-	void Refresh(unsigned int speed, float mutation_rate, float influence_rate, float conserve_mut, float conserve_inf, bool colored);
+	void Refresh(unsigned int speed, float mutation_rate, float influence_rate, float conserve_mut, float conserve_inf, unsigned int colored);
 
 	void UpdateCell(int i, int j, float mutation_rate, float influence_rate, float conserve_mut, float conserve_inf);
 
