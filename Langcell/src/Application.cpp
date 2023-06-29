@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <thread>
 
+#include "stb_image/stb_image.h"
+
 #include "Renderer.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
@@ -94,7 +96,13 @@ int main(void)
 		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
 		shader.SetUniformMat4f("u_MVP", mvp);
 
+		GLFWimage images[1];
+		images[0].pixels = stbi_load("res/textures/icon.png", &images[0].width, &images[0].height, 0, STBI_rgb_alpha);
+		glfwSetWindowIcon(window, 1, images);
+		stbi_image_free(images[0].pixels);
+
 		Texture texture("res/textures/worldmapnew.png");
+		
 		texture.Bind();
 		shader.SetUniform1i("u_Texture", 0);
 		/*Everything is Unbound*/

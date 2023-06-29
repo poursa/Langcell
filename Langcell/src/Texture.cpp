@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Cell.h"
 #include <thread>
+#include <mutex>
 
 #include "stb_image/stb_image.h"
 
@@ -10,7 +11,7 @@
 Texture::Texture(const std::string & path)
 	:m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0), m_update(0)
 {
-	stbi_set_flip_vertically_on_load(1);
+	stbi_set_flip_vertically_on_load(true);
 
 	m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_BPP, 4);
 
@@ -179,18 +180,26 @@ void Texture::Refresh(unsigned int speed, float mutation_rate, float influence_r
 		}
 	};
 
-	//TODO: Reuse threads
-	std::vector<std::thread> threads;
-	for (int split = 0; split < TEX_THREADS; split++) {
-		threads.emplace_back(upcells, m_Height * split / TEX_THREADS, m_Height * (split + 1) / TEX_THREADS);
-	}
+	
 
-	for (auto &thr : threads) {
-		if(thr.joinable()) thr.join();
+	for (int split = 0; split < thread_pool.pool_size; split++) {
+		thread_pool.add_work(upcells, m_Height * split / thread_pool.pool_size, m_Height * (split + 1) / thread_pool.pool_size);
 	}
-
+	thread_pool.start_running();
+	thread_pool.wait_to_finish();
 
 	
+	//for (int split = 0; split < TEX_THREADS; split++) {
+	//	threads.emplace_back(upcells, m_Height * split / TEX_THREADS, m_Height * (split + 1) / TEX_THREADS);
+	//}
+
+	//for (auto &thr : threads) {
+	//	if(thr.joinable()) thr.join();
+	//}
+
+	
+	
+
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer));
 

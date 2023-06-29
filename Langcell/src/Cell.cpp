@@ -104,7 +104,7 @@ RGBAstr Cell::getColor(const unsigned int colored) const
 		colorrgb = { grey_255, grey_255, grey_255, 255 };
 		break;
 	case BW_LUMINOSITY:
-		grey_255 = static_cast<unsigned int>(0.3f * red_255 + 0.59f * green_255 + 0.11 * blue_255);
+		grey_255 = static_cast<unsigned int>(0.3f * red_255 + 0.59f * green_255 + 0.11f * blue_255);
 		colorrgb = { grey_255, grey_255, grey_255, 255 };
 		break;
 	default:

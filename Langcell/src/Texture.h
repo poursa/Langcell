@@ -1,11 +1,10 @@
 #pragma once
 
-#include <future>
 
 #include "Renderer.h"
 #include "Cell.h"
+#include "TexThreadPool.h"
 
-inline constexpr int TEX_THREADS = 10;
 
 class Texture {
 private:
@@ -16,6 +15,7 @@ private:
 	std::vector<std::vector<Cell>> cells;
 	unsigned int m_update;
 
+	static inline TexThreadPool thread_pool;
 
 
 

@@ -60,6 +60,9 @@
     <ClCompile Include="src\Callbacks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\TexThreadPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -1245,6 +1248,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Callbacks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TexThreadPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
