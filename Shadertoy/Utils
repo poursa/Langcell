@@ -1,0 +1,12 @@
+
+float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+float cossimil(vec3 veca, vec3 vecb){
+    return dot(veca, vecb) / (length (veca) * length(vecb) + 0.001);
+}
+
+bool vectorsAreClose(vec3 veca, vec3 vecb){
+    return length(veca - vecb) < 0.01;
+}
